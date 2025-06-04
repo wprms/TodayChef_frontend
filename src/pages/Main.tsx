@@ -12,8 +12,6 @@ function Main() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log( getCookie("accessToken"));
-    console.log( getCookie("lastLoginTime"));
   }, []);
 
   const login = (loginId: string, loginPw: string) => {
@@ -61,11 +59,6 @@ function Main() {
         if (resultCode === "STI01") {
           setCookie("accessToken", response.headers.accesstoken, 1);
           setCookie("lastLoginTime", response.headers.lastlogintime, 1);
-          // //@ts-ignore
-          // setUserInfoV((prevValue) => ({
-          //   ...prevValue,
-          //   userName: response.data.result.userName
-          // }));
           navigate("/main");
         }
         else if (resultCode === "MBB01") {

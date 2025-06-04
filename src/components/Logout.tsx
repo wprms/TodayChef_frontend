@@ -1,12 +1,12 @@
 import Swal from "sweetalert2";
 import axios from 'axios';
-import { useNavigate } from "react-router-dom";
 import { getCookie, delCookie } from '../utils/cookie';
+import { useNavigate } from "react-router-dom";
 
-export function Logout() {
+export function MemBerLogout() {
+
   axios
-    .post(
-      "/logout", {},
+    .post('/member/logout', {},
       {
         withCredentials: true,
         headers: {
@@ -24,7 +24,6 @@ export function Logout() {
 
         delCookie("accessToken");
         delCookie("lastLoginTime");
-
         Swal.fire({
           icon: "success",
           title: "完了",

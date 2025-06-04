@@ -2,49 +2,21 @@ import '../css/Header.css';
 import React, { useRef, useEffect, useState } from 'react';
 import { FaBars } from 'react-icons/fa';
 import { Link, useNavigate } from "react-router-dom";
-import { Logout  } from "../components/Logout";
+import { MemBerLogout  } from "../components/Logout";
 import { getCookie } from '../utils/cookie';
 import Swal from "sweetalert2";
 import { delCookie } from '../utils/cookie';
-import { useRecoilState, useResetRecoilState } from "recoil";
-const Header = () => {
-    const navigate = useNavigate();
-    const accessToken = getCookie("accessToken");
-    const lastLoginTime = getCookie("lastLoginTime");
 
-    function loginStatus() {
-       Swal.fire({
-        icon: "warning",
-        title: "エラー",
-        text: "IDを入力してください。",
-        confirmButtonText: "OK",
-        showCloseButton: true,
-      })
-    }
+const Header = () => {
+  const navigate = useNavigate();
+  const accessToken = getCookie("accessToken");
+  const lastLoginTime = getCookie("lastLoginTime");
 
     function Menu() {
         const [isOpen, setIsOpen] = useState(false);
         const toggleMenu = () => {
           setIsOpen(!isOpen);
         };
-        const logout = () => {
-          if(accessToken !== null && lastLoginTime !== null){            
-            Logout();
-            delCookie("accessToken");
-            delCookie("lastLoginTime");
-            navigate("/login");
-          }
-          else{
-            Swal.fire({
-              icon: "warning",
-              title: "ERROR",
-              text: "Fail to logout",
-              confirmButtonText: "OK",
-              showCloseButton: true,
-            })
-          }
-        };
-        
         const target = useRef<HTMLInputElement>(null);
 
         useEffect(() => {
@@ -59,6 +31,20 @@ const Header = () => {
           }
       }, []);
       
+      const memberLogout = () => {
+        if(accessToken !== null && lastLoginTime !== null){
+          MemBerLogout();
+        } else{
+          Swal.fire({
+            icon: "warning",
+            title: "エラー",
+            text: "Fail to logout",
+            confirmButtonText: "OK",
+            showCloseButton: true,
+          })
+        }
+      };
+
         return (
           <div className="row align-items-center">
             <div className="col-5" style={{ textAlign: "left"}}>
@@ -77,7 +63,7 @@ const Header = () => {
                 <Link to={"/"} style={{ textDecoration: "none", color: 'black' }}><li className='faBars-in'>{"3"}</li></Link>
                 <Link to={"/"} style={{ textDecoration: "none", color: 'black' }}><li className='faBars-in'>{"4"}</li></Link>
                 <Link to={"/"} style={{ textDecoration: "none", color: 'black' }}><li className='faBars-in'>{"5"}</li></Link>
-                <button className="logoutBtn faBars-in" onClick= {logout} style={{ background: "none", color: 'black' }}><li>로그아웃</li></button>
+                <button className="logoutBtn faBars-in" onClick= {memberLogout} style={{ background: "none", color: 'black' }}><li>ログアウト</li></button>
                 </div>
               </ul>
             )
