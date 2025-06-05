@@ -58,7 +58,7 @@ const Header = () => {
               //@ts-ignore
               <ul className="menu-list" ref={target}>
                 <div>
-                <Link to={"/"} style={{ textDecoration: "none", color: 'black'}}><li  className='faBars-in'>{"1"}</li></Link>
+                <Link to={"/recipeUpload"} style={{ textDecoration: "none", color: 'black'}}><li  className='faBars-in'>{"レシピアップロード"}</li></Link>
                 <Link to={"/"} style={{ textDecoration: "none", color: 'black' }}><li className='faBars-in'>{"2"}</li></Link>
                 <Link to={"/"} style={{ textDecoration: "none", color: 'black' }}><li className='faBars-in'>{"3"}</li></Link>
                 <Link to={"/"} style={{ textDecoration: "none", color: 'black' }}><li className='faBars-in'>{"4"}</li></Link>
