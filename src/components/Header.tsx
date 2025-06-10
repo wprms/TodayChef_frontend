@@ -52,7 +52,6 @@ const Header = () => {
             <span className="menuIcon">
               <FaBars size={20} className="menu-icon" onClick={toggleMenu} />
             </span>
-            <span style={{ marginLeft: "20px"}}>카테고리</span>
             </span>
             {isOpen && (
               //@ts-ignore
@@ -68,8 +67,6 @@ const Header = () => {
               </ul>
             )
             }
-            <Link to={"/recipe"} style={{ textDecoration: "none", color: 'black'}}><span className='headerCategoryLeft'>오늘의 레시피</span></Link>
-            <Link to={"/best"} style={{ textDecoration: "none", color: 'black'}}><span className='headerCategoryLeft'>베스트</span></Link>
             </div> 
             <div className='col-2' style={{ textAlign: "center"}}>
             <Link to={"/main"} style={{ textDecoration: "none", color: 'black'}}><span>오늘의 쉐프</span></Link>

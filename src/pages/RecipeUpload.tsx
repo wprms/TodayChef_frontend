@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from "sweetalert2";
 import axios from 'axios';
-import '../css/Join.css';
+import '../css/Recipe.css';
 import Header from '../components/Header';
 import {
     ResponseData,
@@ -107,13 +107,17 @@ function RecipeUpload() {
 return(
     <div className='row justify-content-center'>
     <Header/>
-      <div className='col-6 text-center'>
+      <div className='text-center'>
             <div className="uploadMain">
-                <div className='uploadBasicInfo'>    
-                  <div className="brText">タイトル</div>
-                  <textarea className='uploadTextName' rows={3} style={{ overflow: 'hidden', resize: 'none' }} onChange={(e) => setTitle(e.target.value)}/> 
-                  <div className="brText">紹介</div>
-                  <textarea className='uploadTextName' rows={3} style={{ overflow: 'hidden', resize: 'none' }} onChange={(e) => setInfo(e.target.value)}/>
+                <div className='uploadBasicInfo'> 
+                  <div className="title-input-container">  
+                  <div className="uploadTextLabel">タイトル</div>
+                  <textarea className='uploadText' rows={6} placeholder="  タイトル" style={{ overflow: 'hidden', resize: 'none' }} onChange={(e) => setTitle(e.target.value)}/> 
+                  </div>
+                  <div className="title-input-container">  
+                  <div className="uploadTextLabel">紹介</div>
+                  <textarea className='uploadText' rows={6} placeholder="  紹介" style={{ overflow: 'hidden', resize: 'none' }} onChange={(e) => setInfo(e.target.value)}/>
+                  </div>    
               </div>             
           </div>
           <div className="uploadBottom">
