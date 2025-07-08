@@ -52,13 +52,12 @@ const Header = () => {
             <span className="menuIcon">
               <FaBars size={20} className="menu-icon" onClick={toggleMenu} />
             </span>
-            <span style={{ marginLeft: "20px"}}>카테고리</span>
             </span>
             {isOpen && (
               //@ts-ignore
               <ul className="menu-list" ref={target}>
                 <div>
-                <Link to={"/"} style={{ textDecoration: "none", color: 'black'}}><li  className='faBars-in'>{"1"}</li></Link>
+                <Link to={"/recipeUpload"} style={{ textDecoration: "none", color: 'black'}}><li  className='faBars-in'>{"レシピアップロード"}</li></Link>
                 <Link to={"/"} style={{ textDecoration: "none", color: 'black' }}><li className='faBars-in'>{"2"}</li></Link>
                 <Link to={"/"} style={{ textDecoration: "none", color: 'black' }}><li className='faBars-in'>{"3"}</li></Link>
                 <Link to={"/"} style={{ textDecoration: "none", color: 'black' }}><li className='faBars-in'>{"4"}</li></Link>
@@ -68,8 +67,6 @@ const Header = () => {
               </ul>
             )
             }
-            <Link to={"/recipe"} style={{ textDecoration: "none", color: 'black'}}><span className='headerCategoryLeft'>오늘의 레시피</span></Link>
-            <Link to={"/best"} style={{ textDecoration: "none", color: 'black'}}><span className='headerCategoryLeft'>베스트</span></Link>
             </div> 
             <div className='col-2' style={{ textAlign: "center"}}>
             <Link to={"/main"} style={{ textDecoration: "none", color: 'black'}}><span>오늘의 쉐프</span></Link>
