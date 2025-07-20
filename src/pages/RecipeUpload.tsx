@@ -12,38 +12,65 @@ function RecipeUpload() {
     const [title, setTitle] = useState('');
     const [info, setInfo] = useState('');
     const [result, setResult] = useState<ResponseData>();
+    const [steps, setSteps] = useState<RecipeStep[]>([
+        { text: '', image: null }, // 최초 1개만
+    ]);
+    const [instagramLink, setInstagramLink] = useState('');
+    const [videoLink, setVideoLink] = useState('');
     const navigate = useNavigate();
 
     const backToMain = () => {
         navigate('/main');
     }
 
-    const [imagePreviews, setImagePreviews] = useState<(string | null)[]>(Array(8).fill(null));
-    const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+    type RecipeStep = {
+        text: string;
+        image: string | null;
+    };
+
+    const stepFileRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+    const updateStepText = (index: number, value: string) => {
+        const updated = [...steps];
+        updated[index].text = value;
+        setSteps(updated);
+    };
 
     const handleImageChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                const updatedPreviews = [...imagePreviews];
-                updatedPreviews[index] = reader.result as string;
-                setImagePreviews(updatedPreviews);
+                const updated = [...steps];
+                updated[index].image = reader.result as string;
+                setSteps(updated);
             };
             reader.readAsDataURL(file);
         }
     };
 
-    const triggerFileSelect = (index: number) => {
-        fileInputRefs.current[index]?.click();
+    const triggerImageUpload = (index: number) => {
+        stepFileRefs.current[index]?.click();
+    };
+
+    const addStep = () => {
+        setSteps((prev) => [...prev, { text: '', image: null }]);
+    };
+
+    const removeStep = (index: number) => {
+        const updated = [...steps];
+        updated.splice(index, 1);
+        setSteps(updated);
     };
 
     const upload = () => {
 
         const requestData = {
-            title: title,
-            info: info,
-            imagePreviews: imagePreviews
+            title,
+            info,
+            steps,
+            instagramLink,
+            videoLink
         };
 
         if (!title || title == null) {
@@ -128,37 +155,82 @@ function RecipeUpload() {
             <div className='text-center'>
                 <div className="uploadMain">
                     <div className='uploadBasicInfo'>
-                        <div className="title-input-container">
-                            <textarea className='uploadText' rows={2} placeholder="  タイトル" style={{ overflow: 'hidden', resize: 'none' }} onChange={(e) => setTitle(e.target.value)} />
+                        <div className="title-input-container input-group">
+                            <textarea className='uploadText' rows={2} placeholder="  " style={{ overflow: 'hidden', resize: 'none' }} onChange={(e) => setTitle(e.target.value)} />
+                            <label htmlFor="title-input" className="input-label">タイトル</label>
                         </div>
-                        <div className="title-input-container">
-                            <textarea className='uploadText' rows={5} placeholder="  紹介" style={{ overflow: 'hidden', resize: 'none' }} onChange={(e) => setInfo(e.target.value)} />
+                        <div className="intro-input-container input-group">
+                            <textarea className='uploadText' rows={3} placeholder="  " style={{ overflow: 'hidden', resize: 'none' }} onChange={(e) => setInfo(e.target.value)} />
+                            <label htmlFor="info-input" className="input-label">紹介</label>
                         </div>
-                        <div className="image-upload-container">
-                            {imagePreviews.map((preview, index) => (
-                                <div key={index} className="image-upload-box" onClick={() => triggerFileSelect(index)}>
-                                    {preview ? (
-                                        <img src={preview} alt={`preview-${index}`} className="image-preview" />
-                                    ) : (
-                                        <span className="plus-icon">＋</span>
-                                    )}
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        style={{ display: 'none' }}
-                                        ref={(el) => (fileInputRefs.current[index] = el)}
-                                        onChange={(e) => handleImageChange(index, e)}
+                        <div className="recipe-input-container input-group">
+                            {steps.map((step, index) => (
+                                <div key={index} className="recipe-step-box">
+
+                                    <div className="step-header">
+                                        <span>{String.fromCharCode(9312 + index)} レシピ</span>
+                                    </div>
+
+                                    <textarea
+                                        className="step-description"
+                                        placeholder={`説明を入力してください`}
+                                        value={step.text}
+                                        onChange={(e) => updateStepText(index, e.target.value)}
                                     />
+
+                                    <div className="step-image-upload" onClick={() => triggerImageUpload(index)}>
+                                        {step.image ? (
+                                            <img src={step.image} className="step-image-preview" alt={`レシピ${index + 1}画像`} />
+                                        ) : (
+                                            <div className="upload-placeholder">＋画像を追加</div>
+                                        )}
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            style={{ display: "none" }}
+                                            ref={(el) => (stepFileRefs.current[index] = el)}
+                                            onChange={(e) => handleImageChange(index, e)}
+                                        />
+                                    </div>
+
+                                    <div className="step-buttons">
+                                        {index > 0 && (
+                                            <button
+                                                className="add-step-button delete-button"
+                                                onClick={() => removeStep(index)}
+                                                type="button"
+                                            >
+                                                削除
+                                            </button>
+                                        )}
+                                        {index === steps.length - 1 && (
+                                            <button
+                                                className="add-step-button"
+                                                onClick={addStep}
+                                                type="button"
+                                            >
+                                                ＋ レシピ追加
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             ))}
+                        </div>
+                        <div className="social-links-container input-group">
+                            <textarea className='uploadText' rows={1} placeholder="  " style={{ overflow: 'hidden', resize: 'none' }} onChange={(e) => setInstagramLink(e.target.value)} />
+                            <label htmlFor="instagram-link" className="input-label">SNSリンク</label>
+                        </div>
+                        <div className="video-links-container input-group">
+                            <textarea className='uploadText' rows={1} placeholder="  " style={{ overflow: 'hidden', resize: 'none' }} onChange={(e) => setVideoLink(e.target.value)} />
+                            <label htmlFor="video-link" className="input-label">動画リンク</label>
                         </div>
                     </div>
                 </div>
                 <div className="uploadBottom">
-                    <button className='uploadApplication' onClick={upload}>
+                    <button className="upload-btn" onClick={upload}>
                         UPLOAD
                     </button>
-                    <button className='uploadBackbtn' onClick={backToMain}>
+                    <button className="upload-btn back-btn" onClick={backToMain}>
                         Back
                     </button>
                 </div>
