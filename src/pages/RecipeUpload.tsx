@@ -156,16 +156,16 @@ function RecipeUpload() {
                 <div className="uploadMain">
                     <div className='uploadBasicInfo'>
                         <div className="title-input-container input-group">
-                            <textarea className='uploadText' rows={2} placeholder="  " style={{ overflow: 'hidden', resize: 'none' }} onChange={(e) => setTitle(e.target.value)} />
+                            <textarea className='uploadText' rows={1} placeholder="  " style={{ overflow: 'hidden', resize: 'none' }} onChange={(e) => setTitle(e.target.value)} />
                             <label htmlFor="title-input" className="input-label">タイトル</label>
                         </div>
                         <div className="intro-input-container input-group">
-                            <textarea className='uploadText' rows={3} placeholder="  " style={{ overflow: 'hidden', resize: 'none' }} onChange={(e) => setInfo(e.target.value)} />
+                            <textarea className='uploadText' rows={2} placeholder="  " style={{ overflow: 'hidden', resize: 'none' }} onChange={(e) => setInfo(e.target.value)} />
                             <label htmlFor="info-input" className="input-label">紹介</label>
                         </div>
                         <div className="recipe-input-container input-group">
                             {steps.map((step, index) => (
-                                <div key={index} className="recipe-step-box">
+                                <div key={index} className="recipe-step-box" style={{ marginTop: index === 0 ? '0' : '1.5rem' }} >
 
                                     <div className="step-header">
                                         <span>{String.fromCharCode(9312 + index)} レシピ</span>
