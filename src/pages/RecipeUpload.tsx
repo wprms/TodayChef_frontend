@@ -13,7 +13,7 @@ function RecipeUpload() {
     const [info, setInfo] = useState('');
     const [result, setResult] = useState<ResponseData>();
     const [steps, setSteps] = useState<RecipeStep[]>([
-        { text: '', image: null }, // 최초 1개만
+        { text: '', image: null }, 
     ]);
     const [instagramLink, setInstagramLink] = useState('');
     const [videoLink, setVideoLink] = useState('');
@@ -66,11 +66,11 @@ function RecipeUpload() {
     const upload = () => {
 
         const requestData = {
-            title,
-            info,
-            steps,
-            instagramLink,
-            videoLink
+            title : title,
+            info : info,
+            steps : steps,
+            instagramLink : instagramLink,
+            videoLink : videoLink
         };
 
         if (!title || title == null) {
@@ -91,9 +91,18 @@ function RecipeUpload() {
                 showCloseButton: true,
             })
             return false
+        } else if ((!steps[0].image || steps[0].image == null) || (!steps[0].text || steps[0].text == null)){
+            Swal.fire({
+                icon: "warning",
+                title: "エラー",
+                text: "レシピを入力してください。",
+                confirmButtonText: "OK",
+                showCloseButton: true,
+            })
+            return false
         }
 
-        axios.post('/receipe/upload',
+        axios.post('/recipe/upload',
             requestData,
             {
                 withCredentials: true,
