@@ -1,0 +1,115 @@
+.recipe-detail-page {
+  min-height: 100vh;
+}
+
+.recipe-detail-wrap {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 24px 20px 40px;
+}
+
+.recipe-detail-top {
+  margin-bottom: 14px;
+}
+
+.recipe-back-link {
+  color: #175cd3;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.recipe-back-link:hover {
+  text-decoration: underline;
+}
+
+.recipe-detail-message {
+  margin-top: 18px;
+  font-size: 16px;
+}
+
+.recipe-detail-message.error {
+  color: #b42318;
+}
+
+.recipe-detail-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.recipe-detail-image {
+  width: 100%;
+  max-height: 380px;
+  object-fit: cover;
+  display: block;
+}
+
+.recipe-detail-image.placeholder {
+  height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f2f4f7;
+  color: #667085;
+}
+
+.recipe-detail-content {
+  padding: 18px;
+}
+
+.recipe-detail-content h2 {
+  margin: 0 0 10px;
+}
+
+.recipe-detail-info {
+  margin: 0 0 14px;
+  color: #344054;
+  line-height: 1.5;
+}
+
+.recipe-detail-links {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.recipe-detail-links a {
+  color: #175cd3;
+  text-decoration: none;
+}
+
+.recipe-detail-links a:hover {
+  text-decoration: underline;
+}
+
+.recipe-steps h3 {
+  margin: 0 0 12px;
+}
+
+.recipe-step-item {
+  border: 1px solid #eaecf0;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.step-number {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475467;
+  margin-bottom: 8px;
+}
+
+.recipe-step-item p {
+  margin: 0 0 10px;
+  line-height: 1.45;
+}
+
+.recipe-step-image {
+  width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #f9fafb;
+}

@@ -1,4 +1,4 @@
-export default {
+const Language = {
   all: '全体',
   login: 'ログイン',
   login_success: 'ログイン成功',
@@ -227,3 +227,5 @@ export default {
   certification_confirm: '直接認証する',
   certification_go_mobile: 'モバイルから接続してください。',
 };
+
+export default Language;

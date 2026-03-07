@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import { useRecoilState } from "recoil";
 import Swal from "sweetalert2";
 import axios from 'axios';
 import '../css/Login.css';
-import { getCookie, setCookie } from "../utils/cookie";
+import { getCookie } from "../utils/cookie";
 import Header from '../components/Header';
 
 function FindId() {
@@ -53,9 +52,6 @@ function FindId() {
       .then((response) => {
         const {
           data: { resultCode },
-        } = response;
-        const {
-          data: { result },
         } = response;
         if (resultCode === "STI01") { //メール送信が完了した場合
           Swal.fire({

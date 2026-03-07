@@ -19,7 +19,7 @@ const baseQueryWithReAuth = async (args, api, extraOptions) => {
   api.dispatch(setShowProgress(true));
   let response = await baseQuery(args, api, extraOptions);
 
-  //오류일때
+  // Error response handling
   if (response.error) {
     if (
       response.error.status === 'TIMEOUT_ERROR' ||
