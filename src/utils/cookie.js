@@ -13,5 +13,5 @@ export function getCookie(name) {
 export function delCookie(cName) {
   var expireDate = new Date();
   expireDate.setDate(expireDate.getDate() - 1);
-  document.cookie = cName + "= " + "; expires=" + expireDate.toGMTString() + "; path=/";
+  document.cookie = cName + '= ; expires=' + expireDate.toGMTString() + '; path=/';
 }

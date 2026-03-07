@@ -4,9 +4,11 @@ import { api } from './services/api';
 import { store } from './services/store';
 import { Provider } from 'react-redux';
 import AppInner from './AppInner';
-
+import { setupAxiosAuth } from './services/axiosAuth';
 
 function App() {
+  setupAxiosAuth();
+
   return (
     <ApiProvider api={api}>
       <Provider store={store}>

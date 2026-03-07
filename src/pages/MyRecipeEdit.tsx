@@ -1,18 +1,41 @@
-import { useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Swal from 'sweetalert2';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import '../css/Recipe.css';
+import Swal from 'sweetalert2';
 import Header from '../components/Header';
+import '../css/Recipe.css';
 import { getCookie } from '../utils/cookie';
-import { ResponseData } from '../services/apiTypes';
+import { extractSingleRecipe, RecipeStep } from '../services/recipeMapper';
 
-type RecipeStep = {
-  text: string;
-  image: string | null;
+type RecipeForm = {
+  title: string;
+  info: string;
+  thumbnailImage: string | null;
+  steps: RecipeStep[];
+  instagramLink: string;
+  videoLink: string;
 };
 
-function RecipeUpload() {
+const defaultForm: RecipeForm = {
+  title: '',
+  info: '',
+  thumbnailImage: null,
+  steps: [{ text: '', image: null }],
+  instagramLink: '',
+  videoLink: '',
+};
+
+function MyRecipeEdit() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const stepFileRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const thumbnailFileRef = useRef<HTMLInputElement | null>(null);
+
+  const [form, setForm] = useState<RecipeForm>(defaultForm);
+  const [loading, setLoading] = useState(true);
+  const [draggingStepIndex, setDraggingStepIndex] = useState<number | null>(null);
+  const [dragOverStepIndex, setDragOverStepIndex] = useState<number | null>(null);
+
   const authHeaders = (): Record<string, string> => {
     const headers: Record<string, string> = {};
     const accessToken = getCookie('accessToken');
@@ -26,40 +49,69 @@ function RecipeUpload() {
     return headers;
   };
 
-  const [title, setTitle] = useState('');
-  const [info, setInfo] = useState('');
-  const [thumbnailImage, setThumbnailImage] = useState<string | null>(null);
-  const [steps, setSteps] = useState<RecipeStep[]>([{ text: '', image: null }]);
-  const [instagramLink, setInstagramLink] = useState('');
-  const [videoLink, setVideoLink] = useState('');
-  const [draggingStepIndex, setDraggingStepIndex] = useState<number | null>(null);
-  const [dragOverStepIndex, setDragOverStepIndex] = useState<number | null>(null);
-  const navigate = useNavigate();
+  const fetchRecipe = async () => {
+    if (!id) {
+      setLoading(false);
+      return;
+    }
 
-  const backToMain = () => {
-    navigate('/main');
+    try {
+      const endpoints = [`/recipe/detail/${id}`, `/recipe/${id}`, `/recipe/view/${id}`, `/receipe/${id}`];
+      let loaded = false;
+
+      for (const endpoint of endpoints) {
+        try {
+          const response = await axios.get(endpoint, { withCredentials: true, headers: authHeaders() });
+          const parsed = extractSingleRecipe(response.data);
+          if (parsed) {
+            setForm({
+              title: parsed.title,
+              info: parsed.info,
+              thumbnailImage: parsed.thumbnailImage ?? null,
+              steps: parsed.steps.length > 0 ? parsed.steps : [{ text: '', image: null }],
+              instagramLink: parsed.instagramLink ?? '',
+              videoLink: parsed.videoLink ?? '',
+            });
+            loaded = true;
+            break;
+          }
+        } catch (_error) {
+          // try next endpoint
+        }
+      }
+
+      if (!loaded) {
+        await Swal.fire({ icon: 'error', title: 'エラー', text: 'レシピを読み込めませんでした。' });
+        navigate('/my-recipes');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const stepFileRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const thumbnailFileRef = useRef<HTMLInputElement | null>(null);
+  useEffect(() => {
+    fetchRecipe();
+  }, [id]);
 
   const updateStepText = (index: number, value: string) => {
-    const updated = [...steps];
-    updated[index].text = value;
-    setSteps(updated);
+    const next = [...form.steps];
+    next[index] = { ...next[index], text: value };
+    setForm({ ...form, steps: next });
   };
 
   const handleImageChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const updated = [...steps];
-        updated[index].image = reader.result as string;
-        setSteps(updated);
-      };
-      reader.readAsDataURL(file);
+    if (!file) {
+      return;
     }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const next = [...form.steps];
+      next[index] = { ...next[index], image: (reader.result as string) ?? null };
+      setForm({ ...form, steps: next });
+    };
+    reader.readAsDataURL(file);
   };
 
   const triggerImageUpload = (index: number) => {
@@ -78,20 +130,26 @@ function RecipeUpload() {
 
     const reader = new FileReader();
     reader.onloadend = () => {
-      setThumbnailImage((reader.result as string) ?? null);
+      setForm((prev) => ({ ...prev, thumbnailImage: (reader.result as string) ?? null }));
     };
     reader.readAsDataURL(file);
   };
 
   const moveStep = (fromIndex: number, toIndex: number) => {
-    if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || fromIndex >= steps.length || toIndex >= steps.length) {
+    if (
+      fromIndex === toIndex ||
+      fromIndex < 0 ||
+      toIndex < 0 ||
+      fromIndex >= form.steps.length ||
+      toIndex >= form.steps.length
+    ) {
       return;
     }
 
-    const next = [...steps];
+    const next = [...form.steps];
     const [moved] = next.splice(fromIndex, 1);
     next.splice(toIndex, 0, moved);
-    setSteps(next);
+    setForm({ ...form, steps: next });
   };
 
   const handleStepDragStart = (e: React.DragEvent<HTMLButtonElement>, index: number) => {
@@ -127,112 +185,76 @@ function RecipeUpload() {
   };
 
   const addStep = () => {
-    setSteps((prev) => [...prev, { text: '', image: null }]);
+    setForm({ ...form, steps: [...form.steps, { text: '', image: null }] });
   };
 
   const removeStep = (index: number) => {
-    const updated = [...steps];
-    updated.splice(index, 1);
-    setSteps(updated);
+    if (form.steps.length === 1) {
+      return;
+    }
+
+    const next = [...form.steps];
+    next.splice(index, 1);
+    setForm({ ...form, steps: next });
   };
 
-  const upload = async () => {
-    const requestData = {
-      title,
-      info,
-      thumbnailImage,
-      steps,
-      instagramLink,
-      videoLink,
-    };
-
-    if (!title) {
-      await Swal.fire({
-        icon: 'warning',
-        title: 'エラー',
-        text: 'タイトルを入力してください。',
-        confirmButtonText: 'OK',
-        showCloseButton: true,
-      });
-      return false;
+  const saveRecipe = async () => {
+    if (!id) {
+      return;
     }
 
-    if (!info) {
-      await Swal.fire({
-        icon: 'warning',
-        title: 'エラー',
-        text: '紹介を入力してください。',
-        confirmButtonText: 'OK',
-        showCloseButton: true,
-      });
-      return false;
+    if (!form.title.trim()) {
+      await Swal.fire({ icon: 'warning', title: 'エラー', text: 'タイトルを入力してください。' });
+      return;
     }
 
-    if ((!steps[0].image && !steps[0].text) || !steps[0].text) {
-      await Swal.fire({
-        icon: 'warning',
-        title: 'エラー',
-        text: 'レシピを入力してください。',
-        confirmButtonText: 'OK',
-        showCloseButton: true,
-      });
-      return false;
+    if (!form.info.trim()) {
+      await Swal.fire({ icon: 'warning', title: 'エラー', text: '紹介を入力してください。' });
+      return;
     }
 
-    const uploadEndpoints = ['/recipe/upload', '/receipe/upload'];
-    let uploadSuccess = false;
+    if (!form.steps[0]?.text?.trim()) {
+      await Swal.fire({ icon: 'warning', title: 'エラー', text: 'レシピ手順を入力してください。' });
+      return;
+    }
 
-    for (const endpoint of uploadEndpoints) {
-      try {
-        const response = await axios.post(endpoint, requestData, {
+    try {
+      await axios.put(
+        `/recipe/${id}`,
+        {
+          title: form.title,
+          info: form.info,
+          thumbnailImage: form.thumbnailImage,
+          steps: form.steps,
+          instagramLink: form.instagramLink,
+          videoLink: form.videoLink,
+        },
+        {
           withCredentials: true,
           headers: {
             'Content-Type': 'application/json',
             ...authHeaders(),
           },
-        });
-        const res = response.data as ResponseData;
+        },
+      );
 
-        if (res && res.resultCode === 'STI01') {
-          uploadSuccess = true;
-          break;
-        }
-
-        if (res && res.resultCode === 'MBB09') {
-          await Swal.fire({
-            icon: 'warning',
-            title: '送信エラー',
-            text: res.resultMessage,
-            confirmButtonText: '確認',
-            showCloseButton: true,
-          });
-          return false;
-        }
-      } catch (_error) {
-        // Try next endpoint.
-      }
+      await Swal.fire({ icon: 'success', title: '修正しました', confirmButtonText: '確認' });
+      navigate('/my-recipes');
+    } catch (_error) {
+      await Swal.fire({ icon: 'error', title: 'エラー', text: '修正に失敗しました。' });
     }
-
-    if (!uploadSuccess) {
-      await Swal.fire({
-        icon: 'warning',
-        title: 'エラー',
-        text: '送信中にエラーが発生しました。',
-        confirmButtonText: 'OK',
-        showCloseButton: true,
-      });
-      return false;
-    }
-    await Swal.fire({
-      icon: 'success',
-      title: '送信完了',
-      confirmButtonText: '確認',
-      showCloseButton: true,
-    });
-    navigate('/recipes');
-
-    return true;
   };
+
+  if (loading) {
+    return (
+      <div>
+        <Header />
+        <div className='text-center' style={{ marginTop: '2rem' }}>
+          読み込み中...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='row justify-content-center'>
@@ -246,19 +268,21 @@ function RecipeUpload() {
                 rows={1}
                 placeholder='  '
                 style={{ overflow: 'hidden', resize: 'none' }}
-                onChange={(e) => setTitle(e.target.value)}
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
               />
               <label htmlFor='title-input' className='input-label'>
                 タイトル
               </label>
             </div>
+
             <div className='thumbnail-input-container input-group'>
               <label htmlFor='thumbnail-image' className='input-label'>
                 代表写真（任意）
               </label>
               <div className='thumbnail-upload-box' onClick={triggerThumbnailUpload}>
-                {thumbnailImage ? (
-                  <img src={thumbnailImage} className='step-image-preview' alt='代表写真' />
+                {form.thumbnailImage ? (
+                  <img src={form.thumbnailImage} className='step-image-preview' alt='代表写真' />
                 ) : (
                   <div className='upload-placeholder'>＋代表写真を追加</div>
                 )}
@@ -278,14 +302,16 @@ function RecipeUpload() {
                 rows={2}
                 placeholder='  '
                 style={{ overflow: 'hidden', resize: 'none' }}
-                onChange={(e) => setInfo(e.target.value)}
+                value={form.info}
+                onChange={(e) => setForm({ ...form, info: e.target.value })}
               />
               <label htmlFor='info-input' className='input-label'>
                 紹介
               </label>
             </div>
+
             <div className='recipe-input-container input-group'>
-              {steps.map((step, index) => (
+              {form.steps.map((step, index) => (
                 <div
                   key={`step-${index}`}
                   className={`recipe-step-box${draggingStepIndex === index ? ' dragging' : ''}${dragOverStepIndex === index ? ' drag-over' : ''}`}
@@ -309,7 +335,7 @@ function RecipeUpload() {
                   <textarea
                     className='step-description'
                     placeholder='説明を入力してください'
-                    value={step.text}
+                    value={step.text ?? ''}
                     onChange={(e) => updateStepText(index, e.target.value)}
                   />
 
@@ -334,7 +360,7 @@ function RecipeUpload() {
                         削除
                       </button>
                     )}
-                    {index === steps.length - 1 && (
+                    {index === form.steps.length - 1 && (
                       <button className='add-step-button' onClick={addStep} type='button'>
                         ＋ レシピ追加
                       </button>
@@ -343,25 +369,29 @@ function RecipeUpload() {
                 </div>
               ))}
             </div>
+
             <div className='social-links-container input-group'>
               <textarea
                 className='uploadText'
                 rows={1}
                 placeholder='  '
                 style={{ overflow: 'hidden', resize: 'none' }}
-                onChange={(e) => setInstagramLink(e.target.value)}
+                value={form.instagramLink}
+                onChange={(e) => setForm({ ...form, instagramLink: e.target.value })}
               />
               <label htmlFor='instagram-link' className='input-label'>
                 SNSリンク（任意）
               </label>
             </div>
+
             <div className='video-links-container input-group'>
               <textarea
                 className='uploadText'
                 rows={1}
                 placeholder='  '
                 style={{ overflow: 'hidden', resize: 'none' }}
-                onChange={(e) => setVideoLink(e.target.value)}
+                value={form.videoLink}
+                onChange={(e) => setForm({ ...form, videoLink: e.target.value })}
               />
               <label htmlFor='video-link' className='input-label'>
                 YouTubeリンク（任意）
@@ -369,12 +399,13 @@ function RecipeUpload() {
             </div>
           </div>
         </div>
+
         <div className='uploadBottom'>
-          <button className='upload-btn' onClick={upload}>
-            UPLOAD
+          <button className='upload-btn' onClick={saveRecipe}>
+            修正保存
           </button>
-          <button className='upload-btn back-btn' onClick={backToMain}>
-            Back
+          <button className='upload-btn back-btn' onClick={() => navigate('/my-recipes')}>
+            戻る
           </button>
         </div>
       </div>
@@ -382,4 +413,4 @@ function RecipeUpload() {
   );
 }
 
-export default RecipeUpload;
+export default MyRecipeEdit;

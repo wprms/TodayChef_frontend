@@ -1,4 +1,4 @@
-export default {
+const Urls = {
   baseUrl:
     process.env.NODE_ENV === 'development' ? '' : 'https://todaychef-net.com',
   apiUrl:
@@ -12,3 +12,5 @@ export default {
   defaultImage: '/default_image.png',
   uriSchemeBaseUrl: 'todaychefapp://',
 };
+
+export default Urls;

@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import axios from 'axios';
 import '../css/Join.css';
 import Header from '../components/Header';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import {
     ResponseData,
 } from '../services/apiTypes';
@@ -11,9 +12,12 @@ import {
 function Join() {
   const [id, setId] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [mail, setMail] = useState('');  
-  const [result, setResult] = useState<ResponseData>();
   const navigate = useNavigate();
+  const isPasswordMismatch = confirmPassword.length > 0 && password !== confirmPassword;
 
   const backToLogin = () => {
       navigate('/login');
@@ -26,7 +30,6 @@ function Join() {
           password: password,
           mail: mail,
       };
-      console.log(id,password,mail);
 
       const emailExp = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i
 
@@ -48,6 +51,24 @@ function Join() {
               showCloseButton: true,
           })
           return false    
+      } else if (!confirmPassword || confirmPassword == null){
+          Swal.fire({
+              icon: "warning",
+              title: "エラー",
+              text: "Password確認を入力してください。",
+              confirmButtonText: "OK",
+              showCloseButton: true,
+          })
+          return false
+      } else if (password !== confirmPassword){
+          Swal.fire({
+              icon: "warning",
+              title: "エラー",
+              text: "PasswordとPassword確認が一致しません。",
+              confirmButtonText: "OK",
+              showCloseButton: true,
+          })
+          return false
       } else if (!mail || mail== null){
           Swal.fire({
               icon: "warning",
@@ -79,8 +100,6 @@ function Join() {
       .then((response) => {
           const res = response.data as ResponseData;
           if (res && res.resultCode === 'STI01') {
-              const result = res.result;
-              setResult(result);
               Swal.fire({
                   icon: "success",
                   title: "送信完了",
@@ -108,7 +127,7 @@ function Join() {
                 });
           }
       })
-      .catch((error) => {
+      .catch(() => {
           Swal.fire({
               icon: "warning",
               title: "エラー",
@@ -136,7 +155,20 @@ return(
               </div>
               <div>
                   <div className="brText">Password<span className='imfortantEnter'>*</span></div>
-                  <input className='joinTextName' maxLength={200} type={'text'} onChange={(e) => setPassword(e.target.value.replace(/　/g, '').replace(/ /g, ''))}/> 
+                  <div className='pwd-eye-wrap'>
+                  <input className='joinTextName' maxLength={200} type={showPassword ? 'text' : 'password'} onChange={(e) => setPassword(e.target.value.replace(/　/g, '').replace(/ /g, ''))}/>
+                  <button type='button' className='password-toggle-btn' onClick={() => setShowPassword((prev) => !prev)} aria-label='join-password-toggle'>{showPassword ? <FaEyeSlash /> : <FaEye />}</button>
+                  </div> 
+              </div>
+              <div>
+                  <div className="brText">Password確認<span className='imfortantEnter'>*</span></div>
+                  <div className='pwd-eye-wrap'>
+                  <input className='joinTextName' maxLength={200} type={showConfirmPassword ? 'text' : 'password'} onChange={(e) => setConfirmPassword(e.target.value.replace(/　/g, '').replace(/ /g, ''))}/>
+                  <button type='button' className='password-toggle-btn' onClick={() => setShowConfirmPassword((prev) => !prev)} aria-label='join-confirm-password-toggle'>{showConfirmPassword ? <FaEyeSlash /> : <FaEye />}</button>
+                  </div> 
+                  {isPasswordMismatch ? (
+                    <div className='joinWarningText'>Passwordが一致しません。</div>
+                  ) : null}
               </div>
               <div>
                   <div className="brText">Mail<span className='imfortantEnter'>*</span></div>
@@ -144,11 +176,11 @@ return(
               </div>             
           </div>
           <div className="joinBottom">
-              <button className='joinApplication' onClick={join}>                    
-                      송신
+              <button className='joinApplication' onClick={join} disabled={isPasswordMismatch}>                    
+                      送信
               </button>
               <button className='joinBackbtn' onClick={backToLogin}>                    
-                      로그인
+                      ログイン
               </button>
           </div>
       </div>
