@@ -4,6 +4,7 @@ import axios from 'axios';
 import Header from '../components/Header';
 import '../css/MyPage.css';
 import { extractRecipes } from '../services/recipeMapper';
+import { buildAuthHeaders } from '../utils/authHeaders';
 
 type MyPageInfo = {
   userSysId?: string;
@@ -21,8 +22,8 @@ function MyPage() {
     const fetchMyPage = async () => {
       try {
         const [memberResponse, recipeResponse] = await Promise.all([
-          axios.get('/member/me', { withCredentials: true }),
-          axios.get('/recipe/my', { withCredentials: true }),
+          axios.get('/member/me', { withCredentials: true, headers: buildAuthHeaders() }),
+          axios.get('/recipe/my', { withCredentials: true, headers: buildAuthHeaders() }),
         ]);
 
         const payload = memberResponse.data?.result ?? null;

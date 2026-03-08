@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Swal from 'sweetalert2';
-import { getCookie } from '../utils/cookie';
+import { buildAuthHeaders } from '../utils/authHeaders';
 import Header from '../components/Header';
 import '../css/MyRecipes.css';
 import { extractRecipes, RecipeItem } from '../services/recipeMapper';
@@ -13,23 +13,10 @@ function MyRecipes() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const authHeaders = (): Record<string, string> => {
-    const headers: Record<string, string> = {};
-    const accessToken = getCookie('accessToken');
-    const refreshToken = getCookie('refreshToken');
-    const lastLoginTime = getCookie('lastLoginTime');
-
-    if (accessToken) headers.accessToken = accessToken;
-    if (refreshToken) headers.refreshToken = refreshToken;
-    if (lastLoginTime) headers.lastLoginTime = lastLoginTime;
-
-    return headers;
-  };
-
   const fetchMyRecipes = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/recipe/my', { withCredentials: true, headers: authHeaders() });
+      const response = await axios.get('/recipe/my', { withCredentials: true, headers: buildAuthHeaders() });
       setRecipes(extractRecipes(response.data));
       setError('');
     } catch (_error) {
@@ -43,7 +30,7 @@ function MyRecipes() {
     fetchMyRecipes();
   }, []);
 
-  const deleteRecipe = async (id: string) => {
+  const deleteRecipe = async (recipe: RecipeItem) => {
     const result = await Swal.fire({
       icon: 'warning',
       title: '削除確認',
@@ -58,7 +45,10 @@ function MyRecipes() {
     }
 
     try {
-      await axios.delete(`/recipe/${id}`, { withCredentials: true, headers: authHeaders() });
+      const deleteIds = recipe.sourceIds.length > 0 ? recipe.sourceIds : [recipe.id];
+      await Promise.all(
+        deleteIds.map((id) => axios.delete(`/recipe/${id}`, { withCredentials: true, headers: buildAuthHeaders() })),
+      );
       await Swal.fire({ icon: 'success', title: '削除しました', confirmButtonText: 'OK' });
       fetchMyRecipes();
     } catch (_error) {
@@ -80,35 +70,44 @@ function MyRecipes() {
         ) : null}
 
         <div className='my-recipe-list'>
-          {recipes.map((recipe) => (
-            <article
-              key={recipe.id}
-              className='my-recipe-card clickable'
-              onClick={() => navigate(`/my-recipes/${recipe.id}/edit`)}
-              role='button'
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  navigate(`/my-recipes/${recipe.id}/edit`);
-                }
-              }}
-            >
-              <h3>{recipe.title}</h3>
-              <p>{recipe.info || '紹介は未入力です。'}</p>
-              <p>STEP {recipe.steps.length}</p>
-              <div className='my-recipe-actions'>
-                <button
-                  type='button'
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteRecipe(recipe.id);
-                  }}
-                >
-                  削除
-                </button>
-              </div>
-            </article>
-          ))}
+          {recipes.map((recipe) => {
+            const previewImage = recipe.thumbnailImage ?? recipe.steps.find((step) => step.image)?.image ?? null;
+            return (
+              <article
+                key={recipe.id}
+                className='my-recipe-card clickable'
+                onClick={() => navigate(`/my-recipes/${recipe.id}/edit`)}
+                role='button'
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    navigate(`/my-recipes/${recipe.id}/edit`);
+                  }
+                }}
+              >
+                {previewImage ? (
+                  <img className='my-recipe-card-image' src={previewImage} alt={recipe.title} />
+                ) : (
+                  <div className='my-recipe-card-image placeholder'>NO IMAGE</div>
+                )}
+                <div className='my-recipe-card-body'>
+                  <h3>{recipe.title}</h3>
+                  <div className='my-recipe-actions'>
+                    <span className='my-recipe-step-count'>STEP {recipe.steps.length}</span>
+                    <button
+                      type='button'
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteRecipe(recipe);
+                      }}
+                    >
+                      削除
+                    </button>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
         </div>
       </div>
     </div>

@@ -1,28 +1,32 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import Header from '../components/Header';
 import '../css/Recipe.css';
-import { getCookie } from '../utils/cookie';
-import { extractSingleRecipe, RecipeStep } from '../services/recipeMapper';
+import { buildAuthHeaders } from '../utils/authHeaders';
+import { extractSingleRecipe, RecipeIngredient, RecipeStep } from '../services/recipeMapper';
 
 type RecipeForm = {
   title: string;
   info: string;
+  ingredients: RecipeIngredient[];
   thumbnailImage: string | null;
   steps: RecipeStep[];
   instagramLink: string;
   videoLink: string;
+  videoFile: string | null;
 };
 
 const defaultForm: RecipeForm = {
   title: '',
   info: '',
+  ingredients: [{ name: '', amount: '' }],
   thumbnailImage: null,
   steps: [{ text: '', image: null }],
   instagramLink: '',
   videoLink: '',
+  videoFile: null,
 };
 
 function MyRecipeEdit() {
@@ -30,47 +34,37 @@ function MyRecipeEdit() {
   const navigate = useNavigate();
   const stepFileRefs = useRef<(HTMLInputElement | null)[]>([]);
   const thumbnailFileRef = useRef<HTMLInputElement | null>(null);
+  const videoFileRef = useRef<HTMLInputElement | null>(null);
 
   const [form, setForm] = useState<RecipeForm>(defaultForm);
   const [loading, setLoading] = useState(true);
   const [draggingStepIndex, setDraggingStepIndex] = useState<number | null>(null);
   const [dragOverStepIndex, setDragOverStepIndex] = useState<number | null>(null);
 
-  const authHeaders = (): Record<string, string> => {
-    const headers: Record<string, string> = {};
-    const accessToken = getCookie('accessToken');
-    const refreshToken = getCookie('refreshToken');
-    const lastLoginTime = getCookie('lastLoginTime');
-
-    if (accessToken) headers.accessToken = accessToken;
-    if (refreshToken) headers.refreshToken = refreshToken;
-    if (lastLoginTime) headers.lastLoginTime = lastLoginTime;
-
-    return headers;
-  };
-
-  const fetchRecipe = async () => {
+  const fetchRecipe = useCallback(async () => {
     if (!id) {
       setLoading(false);
       return;
     }
 
     try {
-      const endpoints = [`/recipe/detail/${id}`, `/recipe/${id}`, `/recipe/view/${id}`, `/receipe/${id}`];
+      const endpoints = [`/recipe/${id}`, `/recipe/view/${id}`, `/receipe/${id}`, `/recipe/detail/${id}`];
       let loaded = false;
 
       for (const endpoint of endpoints) {
         try {
-          const response = await axios.get(endpoint, { withCredentials: true, headers: authHeaders() });
+          const response = await axios.get(endpoint, { withCredentials: true, headers: buildAuthHeaders() });
           const parsed = extractSingleRecipe(response.data);
           if (parsed) {
             setForm({
               title: parsed.title,
               info: parsed.info,
+              ingredients: parsed.ingredients.length > 0 ? parsed.ingredients : [{ name: '', amount: '' }],
               thumbnailImage: parsed.thumbnailImage ?? null,
               steps: parsed.steps.length > 0 ? parsed.steps : [{ text: '', image: null }],
               instagramLink: parsed.instagramLink ?? '',
               videoLink: parsed.videoLink ?? '',
+              videoFile: parsed.videoFile ?? null,
             });
             loaded = true;
             break;
@@ -87,11 +81,11 @@ function MyRecipeEdit() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, navigate]);
 
   useEffect(() => {
     fetchRecipe();
-  }, [id]);
+  }, [fetchRecipe]);
 
   const updateStepText = (index: number, value: string) => {
     const next = [...form.steps];
@@ -122,6 +116,10 @@ function MyRecipeEdit() {
     thumbnailFileRef.current?.click();
   };
 
+  const triggerVideoUpload = () => {
+    videoFileRef.current?.click();
+  };
+
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) {
@@ -131,6 +129,18 @@ function MyRecipeEdit() {
     const reader = new FileReader();
     reader.onloadend = () => {
       setForm((prev) => ({ ...prev, thumbnailImage: (reader.result as string) ?? null }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setForm((prev) => ({ ...prev, videoFile: (reader.result as string) ?? null }));
     };
     reader.readAsDataURL(file);
   };
@@ -188,6 +198,25 @@ function MyRecipeEdit() {
     setForm({ ...form, steps: [...form.steps, { text: '', image: null }] });
   };
 
+  const updateIngredient = (index: number, key: 'name' | 'amount', value: string) => {
+    const next = [...form.ingredients];
+    next[index] = { ...next[index], [key]: value };
+    setForm({ ...form, ingredients: next });
+  };
+
+  const addIngredient = () => {
+    setForm({ ...form, ingredients: [...form.ingredients, { name: '', amount: '' }] });
+  };
+
+  const removeIngredient = (index: number) => {
+    if (form.ingredients.length === 1) {
+      return;
+    }
+    const next = [...form.ingredients];
+    next.splice(index, 1);
+    setForm({ ...form, ingredients: next });
+  };
+
   const removeStep = (index: number) => {
     if (form.steps.length === 1) {
       return;
@@ -224,16 +253,18 @@ function MyRecipeEdit() {
         {
           title: form.title,
           info: form.info,
+          ingredients: form.ingredients.filter((item) => (item.name ?? '').trim() || (item.amount ?? '').trim()),
           thumbnailImage: form.thumbnailImage,
           steps: form.steps,
           instagramLink: form.instagramLink,
           videoLink: form.videoLink,
+          videoFile: form.videoFile,
         },
         {
           withCredentials: true,
           headers: {
             'Content-Type': 'application/json',
-            ...authHeaders(),
+            ...buildAuthHeaders(),
           },
         },
       );
@@ -309,7 +340,6 @@ function MyRecipeEdit() {
                 紹介
               </label>
             </div>
-
             <div className='recipe-input-container input-group'>
               {form.steps.map((step, index) => (
                 <div
@@ -369,6 +399,72 @@ function MyRecipeEdit() {
                 </div>
               ))}
             </div>
+            <div className='ingredients-input-container input-group'>
+              <label htmlFor='ingredients-input' className='input-label'>
+                レシピ材料（例: 醤油 | 2スプーン）
+              </label>
+              <div className='ingredient-list'>
+                {form.ingredients.map((ingredient, index) => (
+                  <div key={`ingredient-${index}`} className='ingredient-row'>
+                    <input
+                      className='ingredient-input'
+                      type='text'
+                      placeholder='材料名'
+                      value={ingredient.name ?? ''}
+                      onChange={(e) => updateIngredient(index, 'name', e.currentTarget.value)}
+                    />
+                    <input
+                      className='ingredient-input'
+                      type='text'
+                      placeholder='分量'
+                      value={ingredient.amount ?? ''}
+                      onChange={(e) => updateIngredient(index, 'amount', e.currentTarget.value)}
+                    />
+                    {index > 0 ? (
+                      <button className='ingredient-remove' type='button' onClick={() => removeIngredient(index)}>
+                        削除
+                      </button>
+                    ) : null}
+                  </div>
+                ))}
+                <button className='ingredient-add' type='button' onClick={addIngredient}>
+                  ＋ 材料追加
+                </button>
+              </div>
+            </div>
+            <div className='video-file-container input-group'>
+              <label htmlFor='video-file' className='input-label'>
+                動画ファイル（任意）
+              </label>
+              <div className='video-upload-box' onClick={triggerVideoUpload}>
+                {form.videoFile ? (
+                  <video className='video-preview' controls src={form.videoFile} />
+                ) : (
+                  <div className='upload-placeholder'>＋動画追加</div>
+                )}
+                <input
+                  id='video-file'
+                  type='file'
+                  accept='video/*'
+                  style={{ display: 'none' }}
+                  ref={videoFileRef}
+                  onChange={handleVideoFileChange}
+                />
+              </div>
+            </div>
+            <div className='video-links-container input-group'>
+              <textarea
+                className='uploadText'
+                rows={1}
+                placeholder='  '
+                style={{ overflow: 'hidden', resize: 'none' }}
+                value={form.videoLink}
+                onChange={(e) => setForm({ ...form, videoLink: e.target.value })}
+              />
+              <label htmlFor='video-link' className='input-label'>
+                動画リンク（任意）
+              </label>
+            </div>
 
             <div className='social-links-container input-group'>
               <textarea
@@ -381,20 +477,6 @@ function MyRecipeEdit() {
               />
               <label htmlFor='instagram-link' className='input-label'>
                 SNSリンク（任意）
-              </label>
-            </div>
-
-            <div className='video-links-container input-group'>
-              <textarea
-                className='uploadText'
-                rows={1}
-                placeholder='  '
-                style={{ overflow: 'hidden', resize: 'none' }}
-                value={form.videoLink}
-                onChange={(e) => setForm({ ...form, videoLink: e.target.value })}
-              />
-              <label htmlFor='video-link' className='input-label'>
-                YouTubeリンク（任意）
               </label>
             </div>
           </div>

@@ -3,14 +3,23 @@ export type RecipeStep = {
   image?: string | null;
 };
 
+export type RecipeIngredient = {
+  name?: string;
+  amount?: string;
+};
+
 export type RecipeItem = {
   id: string;
+  sourceIds: string[];
   title: string;
   info: string;
+  ingredients: RecipeIngredient[];
   steps: RecipeStep[];
+  viewCount: number;
   thumbnailImage?: string;
   instagramLink?: string;
   videoLink?: string;
+  videoFile?: string;
 };
 
 const asRecord = (value: unknown): Record<string, unknown> => {
@@ -33,6 +42,22 @@ const getString = (record: Record<string, unknown>, keys: string[]): string | un
   return undefined;
 };
 
+const getNumber = (record: Record<string, unknown>, keys: string[], fallback = 0): number => {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value;
+    }
+    if (typeof value === 'string' && value.trim().length > 0) {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) {
+        return parsed;
+      }
+    }
+  }
+  return fallback;
+};
+
 const toArray = (value: unknown): unknown[] => {
   if (Array.isArray(value)) {
     return value;
@@ -41,7 +66,12 @@ const toArray = (value: unknown): unknown[] => {
 };
 
 const toRecipeKey = (recipe: RecipeItem): string => {
-  return [recipe.title.trim().toLowerCase(), (recipe.instagramLink ?? '').trim(), (recipe.videoLink ?? '').trim()].join('||');
+  return [
+    recipe.title.trim().toLowerCase(),
+    recipe.info.trim(),
+    (recipe.instagramLink ?? '').trim(),
+    (recipe.videoLink ?? '').trim(),
+  ].join('||');
 };
 
 export const parseSteps = (value: unknown): RecipeStep[] => {
@@ -75,17 +105,59 @@ export const parseSteps = (value: unknown): RecipeStep[] => {
   return [];
 };
 
+export const parseIngredients = (value: unknown): RecipeIngredient[] => {
+  if (Array.isArray(value)) {
+    return value
+      .filter((item) => item && typeof item === 'object')
+      .map((item) => {
+        const record = asRecord(item);
+        return {
+          name: getString(record, ['name', 'ingredientName', 'title']) ?? '',
+          amount: getString(record, ['amount', 'quantity', 'measure']) ?? '',
+        };
+      })
+      .filter((item) => (item.name ?? '').trim().length > 0 || (item.amount ?? '').trim().length > 0);
+  }
+
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return parseIngredients(parsed);
+    } catch (_error) {
+      return value
+        .split('\n')
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0)
+        .map((line) => {
+          const [name, ...rest] = line.split(/\s+/);
+          return { name, amount: rest.join(' ') };
+        });
+    }
+  }
+
+  const record = asRecord(value);
+  if (Object.keys(record).length > 0 && record.ingredients) {
+    return parseIngredients(record.ingredients);
+  }
+
+  return [];
+};
+
 export const normalizeRecipe = (item: unknown, index: number): RecipeItem => {
   const record = asRecord(item);
 
   return {
     id: getString(record, ['id', 'recipeId', '_id']) ?? String(index),
+    sourceIds: [getString(record, ['id', 'recipeId', '_id']) ?? String(index)],
     title: getString(record, ['title', 'recipeTitle']) ?? 'タイトル未設定',
     info: getString(record, ['info', 'recipeInfo', 'description']) ?? '',
+    ingredients: parseIngredients(record.ingredients ?? record.recipeIngredients),
     steps: parseSteps(record.steps ?? record.recipeSteps),
+    viewCount: getNumber(record, ['viewCount', 'recipeViewCount', 'views'], 0),
     thumbnailImage: getString(record, ['thumbnailImage', 'recipeThumbnailImage', 'representativeImage']),
     instagramLink: getString(record, ['instagramLink', 'recipeInstagramLink', 'instagramUrl']),
     videoLink: getString(record, ['videoLink', 'recipeVideoLink', 'videoUrl']),
+    videoFile: getString(record, ['videoFile', 'recipeVideoFile']),
   };
 };
 
@@ -111,7 +183,10 @@ const mergeAsRecipeUnits = (list: RecipeItem[]): RecipeItem[] => {
     recipeMap.set(key, {
       ...current,
       info: current.info || recipe.info,
+      ingredients: current.ingredients.length > 0 ? current.ingredients : recipe.ingredients,
       steps: mergedSteps,
+      viewCount: Math.max(current.viewCount, recipe.viewCount),
+      sourceIds: Array.from(new Set([...current.sourceIds, ...recipe.sourceIds])),
     });
   }
 
@@ -127,8 +202,7 @@ export const extractRecipes = (payload: unknown): RecipeItem[] => {
   for (const candidate of candidates) {
     const list = toArray(candidate);
     if (list.length > 0) {
-      const normalized = list.map((item, index) => normalizeRecipe(item, index));
-      return mergeAsRecipeUnits(normalized);
+      return list.map((item, index) => normalizeRecipe(item, index));
     }
   }
 

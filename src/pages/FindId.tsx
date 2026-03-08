@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import axios from 'axios';
@@ -8,11 +8,6 @@ import Header from '../components/Header';
 
 function FindId() {
   const navigate = useNavigate();
-
-  useEffect(() => {
-    console.log( getCookie("accessToken"));
-    console.log( getCookie("lastLoginTime"));
-  }, []);
 
   const find = (inputMail: string) => {
 

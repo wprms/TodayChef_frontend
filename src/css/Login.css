@@ -1,25 +1,7 @@
-.login {
-  min-height: calc(100vh - 88px);
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 3.2rem 1rem 2rem;
-}
-
-.login-panel {
-  width: 100%;
-  max-width: 680px;
-}
-
 .login-content {
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 1.6rem;
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
 }
 
 .loginId,
@@ -44,35 +26,29 @@
 }
 
 .login-findUserInfo {
-  font-size: 0.9rem;
-  color: #475569;
+  margin-top: 0.2rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
-.login-findUserInfo a,
-.signup-btn {
-  color: #1d4ed8;
+.login-find-btn {
+  border: 1px solid #cfd8e3;
+  border-radius: 9px;
+  padding: 0.45rem 0.72rem;
+  background: #f8fafc;
+  color: #334155;
   text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-.loginJoin {
-  margin-top: 0.8rem;
-  text-align: center;
-}
-
-@media (max-width: 768px) {
-  .login {
-    min-height: calc(100vh - 72px);
-    align-items: flex-start;
-    padding: 1.6rem 0.9rem 1.2rem;
-  }
-
-  .login-panel {
-    max-width: 100%;
-  }
-
-  .login-content {
-    padding: 1.1rem;
-  }
+.login-find-btn:hover {
+  background: #eef2f7;
+  border-color: #b9c5d6;
 }
 
 .pwd-eye-wrap {

@@ -68,6 +68,93 @@
   line-height: 1.5;
 }
 
+.recipe-ingredients {
+  margin-bottom: 16px;
+}
+
+.recipe-ingredients h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.recipe-ingredients p {
+  margin: 0;
+  color: #344054;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.recipe-ingredient-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid #eaecf0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.recipe-ingredient-list li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  padding: 9px 12px;
+  background: #fff;
+}
+
+.recipe-ingredient-list li + li {
+  border-top: 1px solid #f2f4f7;
+}
+
+.ingredient-name {
+  color: #101828;
+}
+
+.ingredient-amount {
+  color: #475467;
+  font-weight: 600;
+}
+
+.recipe-video {
+  margin-bottom: 18px;
+}
+
+.recipe-video h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.recipe-video p {
+  margin: 0;
+  color: #475467;
+}
+
+.recipe-video-frame-wrap {
+  width: 100%;
+  border: 1px solid #eaecf0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #000;
+}
+
+.recipe-video-frame {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  display: block;
+}
+
+.recipe-video-link {
+  margin-top: 8px;
+  display: inline-block;
+  color: #175cd3;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.recipe-video-link:hover {
+  text-decoration: underline;
+}
+
 .recipe-detail-links {
   margin-bottom: 20px;
   display: flex;
@@ -112,4 +199,97 @@
   object-fit: contain;
   border-radius: 8px;
   background: #f9fafb;
+}
+
+.recipe-comments {
+  margin-top: 28px;
+}
+
+.recipe-comments h3 {
+  margin: 0 0 12px;
+}
+
+.recipe-comment-message {
+  margin: 0 0 10px;
+  color: #475467;
+}
+
+.recipe-comment-message.error {
+  color: #b42318;
+}
+
+.recipe-comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.recipe-comment-item {
+  border: 1px solid #eaecf0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #fff;
+}
+
+.recipe-comment-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.recipe-comment-writer {
+  font-size: 13px;
+  font-weight: 700;
+  color: #344054;
+}
+
+.recipe-comment-time {
+  font-size: 12px;
+  color: #667085;
+}
+
+.recipe-comment-item p {
+  margin: 0;
+  color: #101828;
+  white-space: pre-wrap;
+  line-height: 1.45;
+}
+
+.recipe-comment-form {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.recipe-comment-form textarea {
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  min-height: 88px;
+  padding: 10px 12px;
+  resize: vertical;
+  font-size: 14px;
+}
+
+.recipe-comment-form button {
+  align-self: flex-end;
+  border: 0;
+  border-radius: 8px;
+  background: #60a5fa;
+  color: #fff;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.recipe-comment-form button:hover {
+  background: #3b82f6;
+}
+
+.recipe-comment-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

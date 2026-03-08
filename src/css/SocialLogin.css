@@ -1,0 +1,62 @@
+.social-login-wrap {
+  margin-top: 1rem;
+  padding: 0.9rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.social-login-title {
+  text-align: left;
+  font-size: 0.88rem;
+  color: #334155;
+  margin-bottom: 0.6rem;
+}
+
+.social-login-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.social-login-btn {
+  border: 1px solid #d0dae7;
+  border-radius: 9px;
+  padding: 0.52rem 0.58rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  background: #fff;
+  transition: filter 0.15s ease;
+}
+
+.social-login-btn:hover {
+  filter: brightness(0.97);
+}
+
+.social-google {
+  color: #1f2937;
+}
+
+.social-naver {
+  color: #0f9d58;
+}
+
+.social-kakao {
+  color: #7c5a00;
+  background: #fee500;
+}
+
+.social-line {
+  color: #06c755;
+}
+
+.social-yahoo {
+  color: #6d28d9;
+}
+
+@media (max-width: 640px) {
+  .social-login-grid {
+    grid-template-columns: 1fr;
+  }
+}
