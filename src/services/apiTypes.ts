@@ -4,8 +4,3 @@ export type ResponseData = {
   resultMessage: string;
   result: any;
 };
-
-//Test
-export type TestData = {
-  test: string;
-};

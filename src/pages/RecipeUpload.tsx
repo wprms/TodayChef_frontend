@@ -4,7 +4,7 @@ import Swal from 'sweetalert2';
 import axios from 'axios';
 import '../css/Recipe.css';
 import Header from '../components/Header';
-import { getCookie } from '../utils/cookie';
+import { buildAuthHeaders } from '../utils/authHeaders';
 import { ResponseData } from '../services/apiTypes';
 
 type RecipeStep = {
@@ -12,26 +12,20 @@ type RecipeStep = {
   image: string | null;
 };
 
+type RecipeIngredient = {
+  name: string;
+  amount: string;
+};
+
 function RecipeUpload() {
-  const authHeaders = (): Record<string, string> => {
-    const headers: Record<string, string> = {};
-    const accessToken = getCookie('accessToken');
-    const refreshToken = getCookie('refreshToken');
-    const lastLoginTime = getCookie('lastLoginTime');
-
-    if (accessToken) headers.accessToken = accessToken;
-    if (refreshToken) headers.refreshToken = refreshToken;
-    if (lastLoginTime) headers.lastLoginTime = lastLoginTime;
-
-    return headers;
-  };
-
   const [title, setTitle] = useState('');
   const [info, setInfo] = useState('');
+  const [ingredients, setIngredients] = useState<RecipeIngredient[]>([{ name: '', amount: '' }]);
   const [thumbnailImage, setThumbnailImage] = useState<string | null>(null);
   const [steps, setSteps] = useState<RecipeStep[]>([{ text: '', image: null }]);
   const [instagramLink, setInstagramLink] = useState('');
   const [videoLink, setVideoLink] = useState('');
+  const [videoFile, setVideoFile] = useState<string | null>(null);
   const [draggingStepIndex, setDraggingStepIndex] = useState<number | null>(null);
   const [dragOverStepIndex, setDragOverStepIndex] = useState<number | null>(null);
   const navigate = useNavigate();
@@ -42,6 +36,7 @@ function RecipeUpload() {
 
   const stepFileRefs = useRef<(HTMLInputElement | null)[]>([]);
   const thumbnailFileRef = useRef<HTMLInputElement | null>(null);
+  const videoFileRef = useRef<HTMLInputElement | null>(null);
 
   const updateStepText = (index: number, value: string) => {
     const updated = [...steps];
@@ -70,6 +65,10 @@ function RecipeUpload() {
     thumbnailFileRef.current?.click();
   };
 
+  const triggerVideoUpload = () => {
+    videoFileRef.current?.click();
+  };
+
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) {
@@ -79,6 +78,18 @@ function RecipeUpload() {
     const reader = new FileReader();
     reader.onloadend = () => {
       setThumbnailImage((reader.result as string) ?? null);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setVideoFile((reader.result as string) ?? null);
     };
     reader.readAsDataURL(file);
   };
@@ -130,6 +141,25 @@ function RecipeUpload() {
     setSteps((prev) => [...prev, { text: '', image: null }]);
   };
 
+  const updateIngredient = (index: number, key: 'name' | 'amount', value: string) => {
+    const next = [...ingredients];
+    next[index] = { ...next[index], [key]: value };
+    setIngredients(next);
+  };
+
+  const addIngredient = () => {
+    setIngredients((prev) => [...prev, { name: '', amount: '' }]);
+  };
+
+  const removeIngredient = (index: number) => {
+    if (ingredients.length === 1) {
+      return;
+    }
+    const next = [...ingredients];
+    next.splice(index, 1);
+    setIngredients(next);
+  };
+
   const removeStep = (index: number) => {
     const updated = [...steps];
     updated.splice(index, 1);
@@ -140,10 +170,12 @@ function RecipeUpload() {
     const requestData = {
       title,
       info,
+      ingredients: ingredients.filter((item) => item.name.trim() || item.amount.trim()),
       thumbnailImage,
       steps,
       instagramLink,
       videoLink,
+      videoFile,
     };
 
     if (!title) {
@@ -188,7 +220,7 @@ function RecipeUpload() {
           withCredentials: true,
           headers: {
             'Content-Type': 'application/json',
-            ...authHeaders(),
+            ...buildAuthHeaders(),
           },
         });
         const res = response.data as ResponseData;
@@ -260,7 +292,7 @@ function RecipeUpload() {
                 {thumbnailImage ? (
                   <img src={thumbnailImage} className='step-image-preview' alt='代表写真' />
                 ) : (
-                  <div className='upload-placeholder'>＋代表写真を追加</div>
+                  <div className='upload-placeholder'>＋写真追加</div>
                 )}
                 <input
                   id='thumbnail-image'
@@ -317,7 +349,7 @@ function RecipeUpload() {
                     {step.image ? (
                       <img src={step.image} className='step-image-preview' alt={`レシピ${index + 1}画像`} />
                     ) : (
-                      <div className='upload-placeholder'>＋画像を追加</div>
+                      <div className='upload-placeholder'>＋写真追加</div>
                     )}
                     <input
                       type='file'
@@ -343,17 +375,58 @@ function RecipeUpload() {
                 </div>
               ))}
             </div>
-            <div className='social-links-container input-group'>
-              <textarea
-                className='uploadText'
-                rows={1}
-                placeholder='  '
-                style={{ overflow: 'hidden', resize: 'none' }}
-                onChange={(e) => setInstagramLink(e.target.value)}
-              />
-              <label htmlFor='instagram-link' className='input-label'>
-                SNSリンク（任意）
+            <div className='ingredients-input-container input-group'>
+              <label htmlFor='ingredients-input' className='input-label'>
+                レシピ材料（例: 醤油 | 2スプーン）
               </label>
+              <div className='ingredient-list'>
+                {ingredients.map((ingredient, index) => (
+                  <div key={`ingredient-${index}`} className='ingredient-row'>
+                    <input
+                      className='ingredient-input'
+                      type='text'
+                      placeholder='材料名'
+                      value={ingredient.name}
+                      onChange={(e) => updateIngredient(index, 'name', e.currentTarget.value)}
+                    />
+                    <input
+                      className='ingredient-input'
+                      type='text'
+                      placeholder='分量'
+                      value={ingredient.amount}
+                      onChange={(e) => updateIngredient(index, 'amount', e.currentTarget.value)}
+                    />
+                    {index > 0 ? (
+                      <button className='ingredient-remove' type='button' onClick={() => removeIngredient(index)}>
+                        削除
+                      </button>
+                    ) : null}
+                  </div>
+                ))}
+                <button className='ingredient-add' type='button' onClick={addIngredient}>
+                  ＋ 材料追加
+                </button>
+              </div>
+            </div>
+            <div className='video-file-container input-group'>
+              <label htmlFor='video-file' className='input-label'>
+                動画ファイル（任意）
+              </label>
+              <div className='video-upload-box' onClick={triggerVideoUpload}>
+                {videoFile ? (
+                  <video className='video-preview' controls src={videoFile} />
+                ) : (
+                  <div className='upload-placeholder'>＋動画追加</div>
+                )}
+                <input
+                  id='video-file'
+                  type='file'
+                  accept='video/*'
+                  style={{ display: 'none' }}
+                  ref={videoFileRef}
+                  onChange={handleVideoFileChange}
+                />
+              </div>
             </div>
             <div className='video-links-container input-group'>
               <textarea
@@ -364,7 +437,19 @@ function RecipeUpload() {
                 onChange={(e) => setVideoLink(e.target.value)}
               />
               <label htmlFor='video-link' className='input-label'>
-                YouTubeリンク（任意）
+                動画リンク（任意）
+              </label>
+            </div>
+            <div className='social-links-container input-group'>
+              <textarea
+                className='uploadText'
+                rows={1}
+                placeholder='  '
+                style={{ overflow: 'hidden', resize: 'none' }}
+                onChange={(e) => setInstagramLink(e.target.value)}
+              />
+              <label htmlFor='instagram-link' className='input-label'>
+                SNSリンク（任意）
               </label>
             </div>
           </div>

@@ -1,8 +1,9 @@
-import { RecipeItem, RecipeStep } from './recipeMapper';
+import { RecipeIngredient, RecipeItem, RecipeStep, parseIngredients } from './recipeMapper';
 
 export type UploadRecipePayload = {
   title: string;
   info: string;
+  ingredients?: RecipeIngredient[];
   steps: RecipeStep[];
   instagramLink?: string;
   videoLink?: string;
@@ -42,11 +43,15 @@ export const loadLocalRecipes = (): RecipeItem[] => {
       .filter((item) => item && typeof item === 'object')
       .map((item) => {
         const record = item as Record<string, unknown>;
+        const id = typeof record.id === 'string' ? record.id : `local-${Date.now()}`;
         return {
-          id: typeof record.id === 'string' ? record.id : `local-${Date.now()}`,
+          id,
+          sourceIds: [id],
           title: typeof record.title === 'string' ? record.title : 'タイトル未設定',
           info: typeof record.info === 'string' ? record.info : '',
+          ingredients: parseIngredients(record.ingredients),
           steps: sanitizeSteps(record.steps),
+          viewCount: typeof record.viewCount === 'number' ? record.viewCount : 0,
           instagramLink: typeof record.instagramLink === 'string' ? record.instagramLink : undefined,
           videoLink: typeof record.videoLink === 'string' ? record.videoLink : undefined,
         };
@@ -57,11 +62,15 @@ export const loadLocalRecipes = (): RecipeItem[] => {
 };
 
 export const saveLocalRecipe = (payload: UploadRecipePayload): RecipeItem => {
+  const id = `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const nextRecipe: RecipeItem = {
-    id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    id,
+    sourceIds: [id],
     title: payload.title,
     info: payload.info,
+    ingredients: payload.ingredients ?? [],
     steps: sanitizeSteps(payload.steps),
+    viewCount: 0,
     instagramLink: payload.instagramLink,
     videoLink: payload.videoLink,
   };

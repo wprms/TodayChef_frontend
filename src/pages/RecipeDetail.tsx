@@ -5,9 +5,62 @@ import Header from '../components/Header';
 import '../css/RecipeDetail.css';
 import { extractRecipes, extractSingleRecipe, RecipeItem } from '../services/recipeMapper';
 import { loadLocalRecipes } from '../services/recipeStorage';
+import { buildAuthHeaders } from '../utils/authHeaders';
+import { getCookie } from '../utils/cookie';
 
 type LocationState = {
   recipe?: RecipeItem;
+};
+
+type RecipeComment = {
+  commentId: string;
+  writerId: string;
+  commentText: string;
+  recCreateDatetime: string;
+};
+
+const extractComments = (payload: unknown): RecipeComment[] => {
+  const root = payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : {};
+  const candidates = [payload, root.result, root.list, root.items, root.data];
+
+  for (const candidate of candidates) {
+    if (!Array.isArray(candidate)) {
+      continue;
+    }
+    return candidate
+      .filter((item) => item && typeof item === 'object')
+      .map((item, index) => {
+        const record = item as Record<string, unknown>;
+        return {
+          commentId:
+            typeof record.commentId === 'string'
+              ? record.commentId
+              : typeof record.id === 'string'
+                ? record.id
+                : String(index),
+          writerId:
+            typeof record.writerId === 'string'
+              ? record.writerId
+              : typeof record.userSysId === 'string'
+                ? record.userSysId
+                : 'unknown',
+          commentText:
+            typeof record.commentText === 'string'
+              ? record.commentText
+              : typeof record.text === 'string'
+                ? record.text
+                : '',
+          recCreateDatetime:
+            typeof record.recCreateDatetime === 'string'
+              ? record.recCreateDatetime
+              : typeof record.createdAt === 'string'
+                ? record.createdAt
+                : '',
+        };
+      });
+  }
+
+  return [];
 };
 
 function RecipeDetail() {
@@ -17,9 +70,15 @@ function RecipeDetail() {
   const [recipe, setRecipe] = useState<RecipeItem | null>(state?.recipe ?? null);
   const [loading, setLoading] = useState(state?.recipe ? false : true);
   const [error, setError] = useState('');
+  const [comments, setComments] = useState<RecipeComment[]>([]);
+  const [commentLoading, setCommentLoading] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [commentSubmitting, setCommentSubmitting] = useState(false);
+  const [commentError, setCommentError] = useState('');
+  const isLoggedIn = Boolean(getCookie('accessToken') && getCookie('lastLoginTime'));
 
   useEffect(() => {
-    if (!id || state?.recipe) {
+    if (!id) {
       return;
     }
 
@@ -71,7 +130,35 @@ function RecipeDetail() {
     };
 
     fetchRecipeDetail();
-  }, [id, state?.recipe]);
+  }, [id]);
+
+  useEffect(() => {
+    if (!id) {
+      return;
+    }
+
+    const fetchComments = async () => {
+      setCommentLoading(true);
+      setCommentError('');
+      const endpoints = [`/recipe/${id}/comments`, `/receipe/${id}/comments`];
+
+      for (const endpoint of endpoints) {
+        try {
+          const response = await axios.get(endpoint, { withCredentials: true });
+          setComments(extractComments(response.data));
+          setCommentLoading(false);
+          return;
+        } catch (_error) {
+          // Try next endpoint.
+        }
+      }
+
+      setCommentLoading(false);
+      setCommentError('コメントを読み込めませんでした。');
+    };
+
+    fetchComments();
+  }, [id]);
 
   const previewImage = useMemo(() => {
     if (!recipe) {
@@ -79,6 +166,56 @@ function RecipeDetail() {
     }
     return recipe.steps.find((step) => step.image)?.image ?? null;
   }, [recipe]);
+
+  const embeddedVideoUrl = useMemo(() => {
+    if (!recipe?.videoLink) {
+      return '';
+    }
+
+    try {
+      const url = new URL(recipe.videoLink);
+      if (url.hostname.includes('youtu.be')) {
+        const id = url.pathname.replace('/', '');
+        return id ? `https://www.youtube.com/embed/${id}` : '';
+      }
+      if (url.hostname.includes('youtube.com')) {
+        const id = url.searchParams.get('v');
+        return id ? `https://www.youtube.com/embed/${id}` : '';
+      }
+      return '';
+    } catch (_error) {
+      return '';
+    }
+  }, [recipe?.videoLink]);
+
+  const submitComment = async () => {
+    if (!id || !commentText.trim()) {
+      return;
+    }
+    setCommentSubmitting(true);
+    setCommentError('');
+
+    try {
+      await axios.post(
+        `/recipe/${id}/comments`,
+        { commentText: commentText.trim() },
+        {
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json',
+            ...buildAuthHeaders(),
+          },
+        },
+      );
+      setCommentText('');
+      const response = await axios.get(`/recipe/${id}/comments`, { withCredentials: true });
+      setComments(extractComments(response.data));
+    } catch (_error) {
+      setCommentError('コメント登録に失敗しました。');
+    } finally {
+      setCommentSubmitting(false);
+    }
+  };
 
   return (
     <div className='recipe-detail-page'>
@@ -113,6 +250,19 @@ function RecipeDetail() {
                   </a>
                 ) : null}
               </div>
+              {recipe.ingredients.length > 0 ? (
+                <section className='recipe-ingredients'>
+                  <h3>レシピ材料</h3>
+                  <ul className='recipe-ingredient-list'>
+                    {recipe.ingredients.map((ingredient, index) => (
+                      <li key={`${recipe.id}-ingredient-${index}`}>
+                        <span className='ingredient-name'>{ingredient.name || '-'}</span>
+                        <span className='ingredient-amount'>{ingredient.amount || '-'}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ) : null}
               <section className='recipe-steps'>
                 <h3>レシピ手順</h3>
                 {recipe.steps.length === 0 ? <p>手順がありません。</p> : null}
@@ -125,6 +275,66 @@ function RecipeDetail() {
                     ) : null}
                   </div>
                 ))}
+              </section>
+              {recipe.videoFile || embeddedVideoUrl || recipe.videoLink ? (
+                <section className='recipe-video'>
+                  <h3>動画</h3>
+                  {recipe.videoFile ? (
+                    <div className='recipe-video-frame-wrap'>
+                      <video className='recipe-video-frame' controls src={recipe.videoFile} />
+                    </div>
+                  ) : embeddedVideoUrl ? (
+                    <div className='recipe-video-frame-wrap'>
+                      <iframe
+                        className='recipe-video-frame'
+                        src={embeddedVideoUrl}
+                        title='recipe video'
+                        allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share'
+                        referrerPolicy='strict-origin-when-cross-origin'
+                        allowFullScreen
+                      />
+                    </div>
+                  ) : null}
+                  {!recipe.videoFile && recipe.videoLink ? (
+                    <a href={recipe.videoLink} target='_blank' rel='noreferrer' className='recipe-video-link'>
+                      動画を開く
+                    </a>
+                  ) : null}
+                </section>
+              ) : null}
+              <section className='recipe-comments'>
+                <h3>コメント</h3>
+                {commentLoading ? <p className='recipe-comment-message'>読み込み中...</p> : null}
+                {!commentLoading && commentError ? <p className='recipe-comment-message error'>{commentError}</p> : null}
+                {!commentLoading && !commentError && comments.length === 0 ? (
+                  <p className='recipe-comment-message'>まだコメントがありません。</p>
+                ) : null}
+                {!commentLoading && comments.length > 0 ? (
+                  <div className='recipe-comment-list'>
+                    {comments.map((comment) => (
+                      <article key={comment.commentId} className='recipe-comment-item'>
+                        <div className='recipe-comment-head'>
+                          <span className='recipe-comment-writer'>{comment.writerId}</span>
+                          <span className='recipe-comment-time'>
+                            {comment.recCreateDatetime ? new Date(comment.recCreateDatetime).toLocaleString('ja-JP') : ''}
+                          </span>
+                        </div>
+                        <p>{comment.commentText}</p>
+                      </article>
+                    ))}
+                  </div>
+                ) : null}
+                <div className='recipe-comment-form'>
+                  <textarea
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.currentTarget.value)}
+                    placeholder={isLoggedIn ? 'コメントを入力してください。' : 'コメント登録はログインが必要です。'}
+                    disabled={!isLoggedIn || commentSubmitting}
+                  />
+                  <button type='button' onClick={submitComment} disabled={!isLoggedIn || commentSubmitting}>
+                    {commentSubmitting ? '送信中...' : 'コメント投稿'}
+                  </button>
+                </div>
               </section>
             </div>
           </article>

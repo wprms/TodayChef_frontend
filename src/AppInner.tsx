@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Join from './pages/Join';
@@ -11,6 +11,19 @@ import RecipeDetail from './pages/RecipeDetail';
 import MyPage from './pages/MyPage';
 import MyRecipes from './pages/MyRecipes';
 import MyRecipeEdit from './pages/MyRecipeEdit';
+import { getCookie } from './utils/cookie';
+
+type ProtectedRouteProps = {
+  children: React.ReactElement;
+};
+
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  const isLoggedIn = Boolean(getCookie('accessToken') && getCookie('lastLoginTime'));
+  if (!isLoggedIn) {
+    return <Navigate to='/login' replace />;
+  }
+  return children;
+};
 
 const AppInner: React.FunctionComponent = () => {
   return (
@@ -24,10 +37,38 @@ const AppInner: React.FunctionComponent = () => {
           <Route path={'/findId'} element={<FindId />} />
           <Route path={'/recipes'} element={<RecipeList />} />
           <Route path={'/recipes/:id'} element={<RecipeDetail />} />
-          <Route path={'/recipeUpload'} element={<RecipeUpload />} />
-          <Route path={'/mypage'} element={<MyPage />} />
-          <Route path={'/my-recipes'} element={<MyRecipes />} />
-          <Route path={'/my-recipes/:id/edit'} element={<MyRecipeEdit />} />
+          <Route
+            path={'/recipeUpload'}
+            element={
+              <ProtectedRoute>
+                <RecipeUpload />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={'/mypage'}
+            element={
+              <ProtectedRoute>
+                <MyPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={'/my-recipes'}
+            element={
+              <ProtectedRoute>
+                <MyRecipes />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={'/my-recipes/:id/edit'}
+            element={
+              <ProtectedRoute>
+                <MyRecipeEdit />
+              </ProtectedRoute>
+            }
+          />
         </Route>
       </Routes>
     </BrowserRouter>

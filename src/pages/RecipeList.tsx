@@ -3,12 +3,8 @@ import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import '../css/RecipeList.css';
-import { extractRecipes, mergeRecipeUnits, RecipeItem } from '../services/recipeMapper';
+import { extractRecipes, RecipeItem } from '../services/recipeMapper';
 import { loadLocalRecipes } from '../services/recipeStorage';
-
-const recipeKey = (recipe: RecipeItem) => {
-  return [recipe.title.trim().toLowerCase(), (recipe.instagramLink ?? '').trim(), (recipe.videoLink ?? '').trim()].join('||');
-};
 
 function RecipeList() {
   const [recipes, setRecipes] = useState<RecipeItem[]>([]);
@@ -52,10 +48,8 @@ function RecipeList() {
         }
       }
 
-      const localRecipes = mergeRecipeUnits(loadLocalRecipes());
-      const remoteKeySet = new Set(remoteRecipes.map(recipeKey));
-      const localOnly = localRecipes.filter((recipe) => !remoteKeySet.has(recipeKey(recipe)));
-      const merged = mergeRecipeUnits([...remoteRecipes, ...localOnly]);
+      const localRecipes = loadLocalRecipes();
+      const merged = [...remoteRecipes, ...localRecipes];
 
       setRecipes(merged);
       setLoading(false);
@@ -121,8 +115,9 @@ function RecipeList() {
                   )}
                   <div className='recipe-card-body'>
                     <h3>{recipe.title}</h3>
-                    <p>{recipe.info || '紹介文がありません。'}</p>
-                    <div className='recipe-card-meta' />
+                    <div className='recipe-card-footer'>
+                      <span className='recipe-view-count'>閲覧 {recipe.viewCount ?? 0}</span>
+                    </div>
                   </div>
                 </article>
               );

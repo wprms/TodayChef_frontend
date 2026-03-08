@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import Swal from "sweetalert2";
 import axios from 'axios';
 import '../css/Join.css';
+import '../css/AuthCard.css';
 import Header from '../components/Header';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import SocialLoginButtons from '../components/SocialLoginButtons';
 import {
     ResponseData,
 } from '../services/apiTypes';
@@ -19,10 +21,6 @@ function Join() {
   const navigate = useNavigate();
   const isPasswordMismatch = confirmPassword.length > 0 && password !== confirmPassword;
 
-  const backToLogin = () => {
-      navigate('/login');
-  }
-  
   const join = () => {
 
       const requestData = {
@@ -145,10 +143,11 @@ function Join() {
   };
 
 return(
-    <div className='row justify-content-center'>
+    <>
     <Header/>
-      <div className='col-6 text-center'>
-            <div className="JoinMain">        
+    <div className='auth-page row justify-content-center'>
+      <div className='auth-col text-center'>
+            <div className="JoinMain auth-card">        
               <div>
                   <div className="brText">ID<span className='imfortantEnter'>*</span></div>
                   <input className='joinTextName' maxLength={200} type={'text'} onChange={(e) => setId(e.target.value.replace(/　/g, '').replace(/ /g, ''))}/> 
@@ -173,18 +172,17 @@ return(
               <div>
                   <div className="brText">Mail<span className='imfortantEnter'>*</span></div>
                   <input className='joinTextName' placeholder='example@todaychef.com' maxLength={50} type={'text'} onChange={(e) => setMail(e.target.value)}/> 
-              </div>             
-          </div>
-          <div className="joinBottom">
-              <button className='joinApplication' onClick={join} disabled={isPasswordMismatch}>                    
-                      送信
-              </button>
-              <button className='joinBackbtn' onClick={backToLogin}>                    
-                      ログイン
-              </button>
+              </div>
+              <div className="joinBottom">
+                  <button className='joinApplication' onClick={join} disabled={isPasswordMismatch}>                    
+                          送信
+                  </button>
+              </div>
+              <SocialLoginButtons title='ソーシャル会員登録' />
           </div>
       </div>
   </div>
+  </>
 
   );
 };

@@ -1,19 +1,44 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import axios from 'axios';
 import '../css/Login.css';
+import '../css/AuthCard.css';
 import { getCookie, setCookie } from '../utils/cookie';
 import Header from '../components/Header';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import SocialLoginButtons from '../components/SocialLoginButtons';
 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    console.log(getCookie('accessToken'));
-    console.log(getCookie('lastLoginTime'));
-  }, []);
+    const params = new URLSearchParams(location.search);
+    const accessToken = params.get('accessToken');
+    const refreshToken = params.get('refreshToken');
+    const lastLoginTime = params.get('lastLoginTime');
+    const socialError = params.get('socialError');
+
+    if (socialError) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'エラー',
+        text: socialError,
+        confirmButtonText: 'OK',
+        showCloseButton: true,
+      });
+      navigate('/login', { replace: true });
+      return;
+    }
+
+    if (accessToken && refreshToken && lastLoginTime) {
+      setCookie('accessToken', accessToken, 1);
+      setCookie('refreshToken', refreshToken, 1);
+      setCookie('lastLoginTime', lastLoginTime, 1);
+      navigate('/main', { replace: true });
+    }
+  }, [location.search, navigate]);
 
   const login = (loginId: string, loginPw: string) => {
     const targetLoginId = loginId.trim();
@@ -103,9 +128,9 @@ function Login() {
     };
 
     return (
-      <div className='row justify-content-center'>
-        <div className='login-panel text-center'>
-          <div className='login-content' onKeyDown={handleKeyDown}>
+      <div className='auth-page row justify-content-center'>
+        <div className='auth-col text-center'>
+          <div className='auth-card login-content' onKeyDown={handleKeyDown}>
             <input
               className='loginId'
               id='loginId'
@@ -145,16 +170,11 @@ function Login() {
             >
               ログイン
             </button>
+            <SocialLoginButtons />
             <div className='login-findUserInfo'>
-              <a href='/findId'>IDを探す</a>
-              <span className='login-and'> | </span>
-              <a href='/findPW'>パスワードを探す</a>
+              <a className='login-find-btn' href='/findId'>IDを探す</a>
+              <a className='login-find-btn' href='/findPW'>パスワードを探す</a>
             </div>
-          </div>
-          <div className='loginJoin'>
-            <span>
-              <a className='signup-btn' href='/join'>新規登録</a>
-            </span>
           </div>
         </div>
       </div>
@@ -164,9 +184,7 @@ function Login() {
   return (
     <div>
       <Header />
-      <div className='login'>
-        {getCookie('accessToken') && getCookie('lastLoginTime') ? null : <LoginInput />}
-      </div>
+      {getCookie('accessToken') && getCookie('lastLoginTime') ? null : <LoginInput />}
     </div>
   );
 }
