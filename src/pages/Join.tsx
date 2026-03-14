@@ -148,6 +148,10 @@ return(
     <div className='auth-page row justify-content-center'>
       <div className='auth-col text-center'>
             <div className="JoinMain auth-card">        
+              <div className='page-heading center'>
+                  <h1 className='page-title'>会員登録</h1>
+                  <p className='page-subtitle'>必要な情報を入力して新しいアカウントを作成します。</p>
+              </div>
               <div>
                   <div className="brText">ID<span className='imfortantEnter'>*</span></div>
                   <input className='joinTextName' maxLength={200} type={'text'} onChange={(e) => setId(e.target.value.replace(/　/g, '').replace(/ /g, ''))}/> 

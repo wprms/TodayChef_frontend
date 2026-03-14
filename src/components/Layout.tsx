@@ -5,7 +5,7 @@ import '../css/Layout.css';
 
 export interface ILayoutProps {}
 
-const Layout: React.FunctionComponent<ILayoutProps> = (props) => {
+const Layout: React.FunctionComponent<ILayoutProps> = () => {
   const location = useLocation();
   const isSimpleLayout =
     location.pathname.includes('/certification') ||
@@ -18,12 +18,16 @@ const Layout: React.FunctionComponent<ILayoutProps> = (props) => {
         <>
           <aside className='ad-fixed ad-fixed-left' aria-label='left-banner-slot'>
             <div className='ad-slot'>
-              <span>広告エリア</span>
+              <span className='ad-badge'>AD</span>
+              <strong>LEFT BANNER</strong>
+              <p>240 x 600</p>
             </div>
           </aside>
           <aside className='ad-fixed ad-fixed-right' aria-label='right-banner-slot'>
             <div className='ad-slot'>
-              <span>広告エリア</span>
+              <span className='ad-badge'>AD</span>
+              <strong>RIGHT BANNER</strong>
+              <p>240 x 600</p>
             </div>
           </aside>
         </>

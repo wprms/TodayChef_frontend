@@ -86,7 +86,9 @@ function RecipeList() {
     <div className='recipe-list-page'>
       <Header />
       <div className='recipe-list-wrap'>
-        <h2 className='recipe-list-title'>みんなのレシピ</h2>
+        <div className='page-heading'>
+          <h1 className='page-title recipe-list-title'>みんなのレシピ</h1>
+        </div>
         {loading ? <p className='recipe-list-message'>読み込み中...</p> : null}
         {!loading && error ? <p className='recipe-list-message error'>{error}</p> : null}
         {!loading && !error && !hasRecipes ? (

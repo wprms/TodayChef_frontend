@@ -131,6 +131,10 @@ function Login() {
       <div className='auth-page row justify-content-center'>
         <div className='auth-col text-center'>
           <div className='auth-card login-content' onKeyDown={handleKeyDown}>
+            <div className='page-heading center'>
+              <h1 className='page-title'>ログイン</h1>
+              <p className='page-subtitle'>TodayChefにログインしてレシピを楽しみましょう。</p>
+            </div>
             <input
               className='loginId'
               id='loginId'

@@ -60,7 +60,9 @@ function MyRecipes() {
     <div className='my-recipes-page'>
       <Header />
       <div className='my-recipes-wrap'>
-        <h2>マイレシピ管理</h2>
+        <div className='page-heading'>
+          <h1 className='page-title'>マイレシピ管理</h1>
+        </div>
         <p className='my-recipes-caption'>カードをクリックすると編集ページに移動します。</p>
 
         {loading ? <p className='my-recipes-message'>読み込み中...</p> : null}
