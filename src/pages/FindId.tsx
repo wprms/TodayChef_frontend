@@ -90,6 +90,10 @@ function FindId() {
     return (
       <div className='row justify-content-center'>
             <div className='col-6 text-center'>
+                <div className='page-heading center'>
+                  <h1 className='page-title'>ID検索</h1>
+                  <p className='page-subtitle'>登録したメールアドレスでアカウント情報を確認します。</p>
+                </div>
                 <div className="find-name" onKeyDown={handleKeyDown}>
                   <input
                     className='inputMail'

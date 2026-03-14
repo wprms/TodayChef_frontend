@@ -46,7 +46,9 @@ function MyPage() {
     <div className='mypage-page'>
       <Header />
       <div className='mypage-wrap'>
-        <h2>マイページ</h2>
+        <div className='page-heading'>
+          <h1 className='page-title'>マイページ</h1>
+        </div>
         {loading ? <p className='mypage-message'>読み込み中...</p> : null}
         {!loading && error ? <p className='mypage-message error'>{error}</p> : null}
         {!loading && !error && info ? (

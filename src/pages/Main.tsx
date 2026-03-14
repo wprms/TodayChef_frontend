@@ -45,8 +45,10 @@ function Main() {
       <Header />
       <main className='main-wrap'>
         <section className='top-recipes-section'>
+          <div className='page-heading'>
+            <h1 className='page-title'>閲覧数ランキング</h1>
+          </div>
           <div className='section-head'>
-            <h2>閲覧数ランキング</h2>
             <button type='button' className='go-list-btn' onClick={() => navigate('/recipes')}>
               レシピ一覧へ
             </button>

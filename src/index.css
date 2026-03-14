@@ -1,10 +1,16 @@
 :root {
-  --bg: #f5f7fb;
+  --bg: #ffffff;
+  --bg-strong: #ffffff;
   --panel: #ffffff;
-  --text: #0f172a;
-  --muted: #64748b;
-  --line: #dbe3ee;
-  --primary: #2563eb;
+  --panel-soft: #f4f9ff;
+  --text: #0c1f44;
+  --muted: #547096;
+  --line: #bfd7f3;
+  --primary: #1d4ed8;
+  --primary-strong: #1e40af;
+  --primary-soft: #dbeafe;
+  --accent: #38bdf8;
+  --shadow: rgba(29, 78, 216, 0.12);
 }
 
 * {
@@ -23,7 +29,7 @@ body,
 }
 
 body {
-  background: radial-gradient(circle at top, #ffffff 0%, var(--bg) 55%);
+  background: #ffffff;
   color: var(--text);
   font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -45,11 +51,63 @@ h6 {
 
 p {
   margin: 0;
-  color: #334155;
+  color: #24426b;
 }
 
 button,
 input,
 textarea {
   font: inherit;
+}
+
+.page-heading {
+  margin: 0 0 20px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+}
+
+.page-heading.center {
+  text-align: center;
+}
+
+.page-title {
+  margin: 0;
+  color: #111827;
+  font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.page-subtitle {
+  margin-top: 8px;
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .page-title {
+    font-size: 22px;
+  }
+}
+
+input,
+textarea,
+button {
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    box-shadow 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+
+input:focus,
+textarea:focus {
+  outline: none;
 }

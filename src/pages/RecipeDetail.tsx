@@ -236,7 +236,9 @@ function RecipeDetail() {
               <div className='recipe-detail-image placeholder'>NO IMAGE</div>
             )}
             <div className='recipe-detail-content'>
-              <h2>{recipe.title}</h2>
+              <div className='page-heading'>
+                <h1 className='page-title'>{recipe.title}</h1>
+              </div>
               <p className='recipe-detail-info'>{recipe.info || '紹介文がありません。'}</p>
               <div className='recipe-detail-links'>
                 {recipe.instagramLink ? (

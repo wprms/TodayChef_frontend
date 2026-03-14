@@ -271,6 +271,10 @@ function RecipeUpload() {
       <Header />
       <div className='text-center'>
         <div className='uploadMain'>
+          <div className='page-heading upload-page-heading'>
+            <h1 className='page-title'>レシピ投稿</h1>
+            <p className='page-subtitle'>写真、材料、手順をまとめてアップロードします。</p>
+          </div>
           <div className='uploadBasicInfo'>
             <div className='title-input-container input-group'>
               <textarea

@@ -292,6 +292,10 @@ function MyRecipeEdit() {
       <Header />
       <div className='text-center'>
         <div className='uploadMain'>
+          <div className='page-heading center'>
+            <h1 className='page-title'>レシピ修正</h1>
+            <p className='page-subtitle'>既存のレシピ内容を同じフォーマットで編集します。</p>
+          </div>
           <div className='uploadBasicInfo'>
             <div className='title-input-container input-group'>
               <textarea
