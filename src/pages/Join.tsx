@@ -3,22 +3,24 @@ import { useNavigate } from 'react-router-dom';
 import Swal from "sweetalert2";
 import axios from 'axios';
 import '../css/Join.css';
+import '../css/AuthCard.css';
+import Header from '../components/Header';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import SocialLoginButtons from '../components/SocialLoginButtons';
 import {
     ResponseData,
 } from '../services/apiTypes';
 
-
 function Join() {
   const [id, setId] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [mail, setMail] = useState('');  
-  const [result, setResult] = useState<ResponseData>();
   const navigate = useNavigate();
+  const isPasswordMismatch = confirmPassword.length > 0 && password !== confirmPassword;
 
-  const backToLogin = () => {
-      navigate('/login');
-  }
-  
   const join = () => {
 
       const requestData = {
@@ -26,7 +28,6 @@ function Join() {
           password: password,
           mail: mail,
       };
-      console.log(id,password,mail);
 
       const emailExp = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i
 
@@ -48,6 +49,24 @@ function Join() {
               showCloseButton: true,
           })
           return false    
+      } else if (!confirmPassword || confirmPassword == null){
+          Swal.fire({
+              icon: "warning",
+              title: "エラー",
+              text: "Password確認を入力してください。",
+              confirmButtonText: "OK",
+              showCloseButton: true,
+          })
+          return false
+      } else if (password !== confirmPassword){
+          Swal.fire({
+              icon: "warning",
+              title: "エラー",
+              text: "PasswordとPassword確認が一致しません。",
+              confirmButtonText: "OK",
+              showCloseButton: true,
+          })
+          return false
       } else if (!mail || mail== null){
           Swal.fire({
               icon: "warning",
@@ -79,8 +98,6 @@ function Join() {
       .then((response) => {
           const res = response.data as ResponseData;
           if (res && res.resultCode === 'STI01') {
-              const result = res.result;
-              setResult(result);
               Swal.fire({
                   icon: "success",
                   title: "送信完了",
@@ -108,7 +125,7 @@ function Join() {
                 });
           }
       })
-      .catch((error) => {
+      .catch(() => {
           Swal.fire({
               icon: "warning",
               title: "エラー",
@@ -126,36 +143,53 @@ function Join() {
   };
 
 return(
-
-  <div className="container joinContainer">
-      <div className="row joinRow">
-            <div className="JoinMain">        
+    <>
+    <Header/>
+    <div className='auth-page row justify-content-center'>
+      <div className='auth-col text-center'>
+            <div className="JoinMain auth-card">        
+              <div className='page-heading center'>
+                  <h1 className='page-title'>会員登録</h1>
+                  <p className='page-subtitle'>必要な情報を入力して新しいアカウントを作成します。</p>
+              </div>
               <div>
-                  <p className="brText">ID<span className='imfortantEnter'>*</span></p>
+                  <div className="brText">ID<span className='imfortantEnter'>*</span></div>
                   <input className='joinTextName' maxLength={200} type={'text'} onChange={(e) => setId(e.target.value.replace(/　/g, '').replace(/ /g, ''))}/> 
               </div>
               <div>
-                  <p className="brText">Password<span className='imfortantEnter'>*</span></p>
-                  <input className='joinTextName' maxLength={200} type={'text'} onChange={(e) => setPassword(e.target.value.replace(/　/g, '').replace(/ /g, ''))}/> 
+                  <div className="brText">Password<span className='imfortantEnter'>*</span></div>
+                  <div className='pwd-eye-wrap'>
+                  <input className='joinTextName' maxLength={200} type={showPassword ? 'text' : 'password'} onChange={(e) => setPassword(e.target.value.replace(/　/g, '').replace(/ /g, ''))}/>
+                  <button type='button' className='password-toggle-btn' onClick={() => setShowPassword((prev) => !prev)} aria-label='join-password-toggle'>{showPassword ? <FaEyeSlash /> : <FaEye />}</button>
+                  </div> 
               </div>
               <div>
-                  <p className="brText">メールアドレス<span className='imfortantEnter'>*</span></p>
+                  <div className="brText">Password確認<span className='imfortantEnter'>*</span></div>
+                  <div className='pwd-eye-wrap'>
+                  <input className='joinTextName' maxLength={200} type={showConfirmPassword ? 'text' : 'password'} onChange={(e) => setConfirmPassword(e.target.value.replace(/　/g, '').replace(/ /g, ''))}/>
+                  <button type='button' className='password-toggle-btn' onClick={() => setShowConfirmPassword((prev) => !prev)} aria-label='join-confirm-password-toggle'>{showConfirmPassword ? <FaEyeSlash /> : <FaEye />}</button>
+                  </div> 
+                  {isPasswordMismatch ? (
+                    <div className='joinWarningText'>Passwordが一致しません。</div>
+                  ) : null}
+              </div>
+              <div>
+                  <div className="brText">Mail<span className='imfortantEnter'>*</span></div>
                   <input className='joinTextName' placeholder='example@todaychef.com' maxLength={50} type={'text'} onChange={(e) => setMail(e.target.value)}/> 
-              </div>             
-          </div>
-          <div className="joinBottom">
-              <button className='joinApplication' onClick={join}>                    
-                      送信
-              </button>
-              <button className='joinBackbtn' onClick={backToLogin}>                    
-                      ログイン画面に戻る
-              </button>
+              </div>
+              <div className="joinBottom">
+                  <button className='joinApplication' onClick={join} disabled={isPasswordMismatch}>                    
+                          送信
+                  </button>
+              </div>
+              <SocialLoginButtons title='ソーシャル会員登録' />
           </div>
       </div>
   </div>
+  </>
 
-              );
-          };
+  );
+};
 
 
 export default Join;

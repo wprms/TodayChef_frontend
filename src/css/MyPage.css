@@ -1,0 +1,50 @@
+.mypage-page {
+  min-height: 100vh;
+}
+
+.mypage-wrap {
+  width: min(700px, 92vw);
+  margin: 2rem auto;
+}
+
+.mypage-card {
+  background: #fff;
+  border: 1px solid #e3e3e3;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+}
+
+.mypage-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.mypage-row:last-child {
+  border-bottom: none;
+}
+
+.mypage-actions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.mypage-link-button {
+  display: inline-block;
+  padding: 0.55rem 0.85rem;
+  border-radius: 8px;
+  background: #1f6feb;
+  color: #fff;
+  text-decoration: none;
+}
+
+.mypage-message {
+  color: #333;
+}
+
+.mypage-message.error {
+  color: #c62828;
+}
