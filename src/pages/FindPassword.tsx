@@ -8,12 +8,24 @@ import '../css/Login.css';
 import { getCookie } from '../utils/cookie';
 import Header from '../components/Header';
 
-function FindId() {
+function FindPassword() {
   const navigate = useNavigate();
 
-  const find = (inputMail: string) => {
+  const submitFindPassword = (loginId: string, inputMail: string) => {
+    const targetLoginId = loginId.trim();
     const targetInputMail = inputMail.trim();
     const emailExp = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+
+    if (targetLoginId.length < 1) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'エラー',
+        text: 'IDを入力してください。',
+        confirmButtonText: 'OK',
+        showCloseButton: true,
+      });
+      return false;
+    }
 
     if (targetInputMail.length < 1) {
       Swal.fire({
@@ -24,7 +36,9 @@ function FindId() {
         showCloseButton: true,
       });
       return false;
-    } else if (!emailExp.test(targetInputMail)) {
+    }
+
+    if (!emailExp.test(targetInputMail)) {
       Swal.fire({
         icon: 'warning',
         title: 'エラー',
@@ -37,54 +51,46 @@ function FindId() {
 
     axios
       .post(
-        '/findId',
+        '/findPW',
         {
+          loginId: targetLoginId,
           inputMail: targetInputMail,
         },
-        {
-          withCredentials: true,
-        },
+        { withCredentials: true },
       )
       .then((response) => {
         const {
           data: { resultCode, resultMessage },
         } = response;
+
         if (resultCode === 'STI01') {
           Swal.fire({
             icon: 'success',
             title: '送信完了',
-            text: resultMessage || 'メールを送信しました。',
+            text: resultMessage || 'パスワード再設定案内を送信しました。',
             confirmButtonText: 'OK',
             showCloseButton: true,
           }).then(() => navigate('/login'));
-        } else if (resultCode === 'MBB01') {
-          Swal.fire({
-            icon: 'warning',
-            title: 'エラー',
-            text: '当該情報の会員が存在しません。',
-            confirmButtonText: 'OK',
-            showCloseButton: true,
-          });
-          return false;
         }
       })
       .catch(() => {
         Swal.fire({
           icon: 'warning',
           title: 'エラー',
-          text: 'ID確認中にエラーが発生しました。',
+          text: 'パスワード確認中にエラーが発生しました。',
           confirmButtonText: 'OK',
           showCloseButton: true,
         });
       });
   };
 
-  function MailInput() {
+  function PasswordFindForm() {
+    const [loginId, setLoginId] = useState('');
     const [inputMail, setInputMail] = useState('');
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
       if (e.code === 'Enter') {
-        find(inputMail);
+        submitFindPassword(loginId, inputMail);
       }
     };
 
@@ -93,32 +99,30 @@ function FindId() {
         <div className='auth-col text-center'>
           <div className='auth-card find-account-card' onKeyDown={handleKeyDown}>
             <div className='page-heading center'>
-              <h1 className='page-title'>ID検索</h1>
-              <p className='page-subtitle'>登録したメールアドレスでアカウント情報を確認します。</p>
+              <h1 className='page-title'>パスワード検索</h1>
+              <p className='page-subtitle'>登録したIDとメールアドレスで確認します。</p>
             </div>
             <div className='find-account-fields'>
               <input
                 className='find-account-input'
-                id='inputMail'
+                placeholder='ID'
+                maxLength={30}
+                type='text'
+                onChange={(e) => setLoginId(e.currentTarget.value)}
+              />
+              <input
+                className='find-account-input'
                 placeholder='メールアドレス'
                 maxLength={50}
-                onChange={(e) => {
-                  setInputMail(e.currentTarget.value);
-                }}
                 type='text'
+                onChange={(e) => setInputMail(e.currentTarget.value)}
               />
             </div>
             <div className='find-account-actions'>
               <button className='login-btn find-account-btn-secondary' type='button' onClick={() => navigate('/login')}>
                 ログインページに戻る
               </button>
-              <button
-                className='login-btn'
-                type='button'
-                onClick={() => {
-                  find(inputMail);
-                }}
-              >
+              <button className='login-btn' type='button' onClick={() => submitFindPassword(loginId, inputMail)}>
                 確認する
               </button>
             </div>
@@ -131,9 +135,9 @@ function FindId() {
   return (
     <div>
       <Header />
-      {getCookie('accessToken') && getCookie('lastLoginTime') ? null : <MailInput />}
+      {getCookie('accessToken') && getCookie('lastLoginTime') ? null : <PasswordFindForm />}
     </div>
   );
 }
 
-export default FindId;
+export default FindPassword;

@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Join from './pages/Join';
 import Main from './pages/Main';
 import FindId from './pages/FindId';
+import FindPassword from './pages/FindPassword';
 import RecipeUpload from './pages/RecipeUpload';
 import RecipeList from './pages/RecipeList';
 import RecipeDetail from './pages/RecipeDetail';
@@ -35,6 +36,7 @@ const AppInner: React.FunctionComponent = () => {
           <Route path={'/join'} element={<Join />} />
           <Route path={'/main'} element={<Main />} />
           <Route path={'/findId'} element={<FindId />} />
+          <Route path={'/findPW'} element={<FindPassword />} />
           <Route path={'/recipes'} element={<RecipeList />} />
           <Route path={'/recipes/:id'} element={<RecipeDetail />} />
           <Route
